@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Muscle Atlas Trainer</title>
+  <style>
+    :root {
+      --bg: #080a0f;
+      --panel: rgba(16, 20, 31, 0.82);
+      --panel-2: rgba(23, 29, 44, 0.92);
+      --line: rgba(255,255,255,.12);
+      --line-strong: rgba(255,255,255,.22);
+      --text: #f2f6ff;
+      --muted: #aab5cc;
+      --quiet: #778195;
+      --accent: #74f2ce;
+      --accent-2: #7aa8ff;
+      --danger: #ff7a90;
+      --warn: #ffd166;
+      --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --radius: 22px;
+      --radius-sm: 14px;
+      --body-idle: rgba(118, 132, 157, .24);
+      --body-stroke: rgba(255,255,255,.16);
+      --primary: #74f2ce;
+      --secondary: #7aa8ff;
+      --mobility: #ffd166;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 20% 12%, rgba(116,242,206,.16), transparent 35%),
+        radial-gradient(circle at 84% 24%, rgba(122,168,255,.15), transparent 34%),
+        linear-gradient(135deg, #080a0f 0%, #101522 52%, #07080c 100%);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    a { color: inherit; }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      height: 100vh;
+      width: 100vw;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      min-height: 74px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(21,27,41,.86), rgba(12,15,24,.82));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .mark {
+      width: 44px; height: 44px; border-radius: 16px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(116,242,206,.25), rgba(122,168,255,.25));
+      border: 1px solid var(--line-strong);
+      box-shadow: inset 0 0 28px rgba(255,255,255,.08);
+      flex: 0 0 auto;
+    }
+    .mark svg { width: 26px; height: 26px; }
+    h1 { margin: 0; font-size: clamp(18px, 2.2vw, 30px); letter-spacing: -.03em; line-height: 1.02; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .pill, .ghost, .solid, select, .search {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255,255,255,.055);
+      padding: 10px 12px;
+      min-height: 40px;
+    }
+    .solid {
+      background: linear-gradient(135deg, rgba(116,242,206,.95), rgba(122,168,255,.92));
+      color: #06100e;
+      border: 0;
+      font-weight: 800;
+    }
+    .ghost:hover, .pill:hover, select:hover { border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.09); }
+    .mode-btn.active { background: rgba(116,242,206,.16); border-color: rgba(116,242,206,.55); color: #dffdf5; }
+
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(560px, 1.35fr) minmax(390px, .95fr);
+      gap: 14px;
+    }
+
+    .left, .right { min-height: 0; }
+
+    .atlas-card, .panel {
+      height: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .atlas-card { display: grid; grid-template-rows: auto 1fr auto; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      min-height: 64px;
+    }
+    .toolbar-left, .toolbar-right { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .search { width: min(290px, 44vw); outline: none; border-radius: 14px; }
+    .search:focus { border-color: rgba(116,242,206,.55); box-shadow: 0 0 0 4px rgba(116,242,206,.08); }
+
+    .body-stage {
+      position: relative;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px;
+    }
+    .body-grid {
+      min-height: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .view-card {
+      min-height: 520px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    .view-card h2 {
+      margin: 0;
+      padding: 12px 12px 0;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--quiet);
+      font-weight: 800;
+    }
+    .view-card svg { width: 100%; height: 100%; display: block; padding: 2px 5px 8px; }
+    .skeleton { fill: rgba(255,255,255,.035); stroke: rgba(255,255,255,.10); stroke-width: 1.3; }
+    .joint { fill: rgba(255,255,255,.10); }
+    .muscle-region {
+      fill: var(--body-idle);
+      stroke: var(--body-stroke);
+      stroke-width: 1.1;
+      transition: fill .15s ease, opacity .15s ease, filter .15s ease, stroke .15s ease;
+      cursor: pointer;
+      opacity: .92;
+    }
+    .muscle-region:hover { fill: rgba(116,242,206,.36); stroke: rgba(116,242,206,.82); filter: drop-shadow(0 0 10px rgba(116,242,206,.25)); }
+    .muscle-region.selected { fill: rgba(116,242,206,.76); stroke: rgba(212,255,245,.95); filter: drop-shadow(0 0 14px rgba(116,242,206,.45)); }
+    .muscle-region.primary-hit { fill: rgba(116,242,206,.88); stroke: rgba(230,255,249,.95); filter: drop-shadow(0 0 16px rgba(116,242,206,.52)); }
+    .muscle-region.secondary-hit { fill: rgba(122,168,255,.72); stroke: rgba(213,226,255,.88); filter: drop-shadow(0 0 13px rgba(122,168,255,.35)); }
+    .muscle-region.dimmed { opacity: .22; }
+    .atlas-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+    .filterbar {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    select { width: 100%; border-radius: 14px; background: rgba(11,14,22,.88); outline: none; }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .stat {
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid var(--line);
+    }
+    .stat b { display: block; font-size: 20px; letter-spacing: -.04em; }
+    .stat span { color: var(--muted); font-size: 12px; }
+
+    .content-scroll { min-height: 0; overflow: auto; padding: 12px; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin: 2px 0 10px; }
+    .section-title h3 { margin: 0; font-size: 15px; letter-spacing: -.01em; }
+    .section-title small { color: var(--muted); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 12px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.055);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+    .chip.primary { border-color: rgba(116,242,206,.5); background: rgba(116,242,206,.13); }
+    .chip.secondary { border-color: rgba(122,168,255,.5); background: rgba(122,168,255,.12); }
+    .chip.warn { border-color: rgba(255,209,102,.48); background: rgba(255,209,102,.11); color: #fff7d9; }
+
+    .exercise-list { display: grid; gap: 10px; }
+    .exercise {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.026));
+      overflow: hidden;
+      transition: border-color .14s ease, transform .14s ease, background .14s ease;
+    }
+    .exercise:hover { border-color: rgba(116,242,206,.36); transform: translateY(-1px); background: rgba(255,255,255,.07); }
+    .exercise.open { border-color: rgba(116,242,206,.5); }
+    .ex-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 12px;
+      align-items: start;
+    }
+    .ex-title { font-weight: 850; letter-spacing: -.02em; margin: 0 0 5px; }
+    .ex-sub { color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .score {
+      min-width: 54px; text-align: center;
+      border: 1px solid rgba(116,242,206,.35);
+      background: rgba(116,242,206,.11);
+      border-radius: 14px;
+      padding: 8px 7px;
+    }
+    .score b { display: block; font-size: 18px; }
+    .score span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    .ex-tags { padding: 0 12px 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .ex-body { display: none; border-top: 1px solid var(--line); padding: 12px; background: rgba(0,0,0,.12); }
+    .exercise.open .ex-body { display: block; }
+
+    .detail-grid { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: start; }
+    .demo {
+      min-height: 150px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .demo svg { width: 100%; height: 150px; }
+    .move-limb { transform-origin: center; animation: limb 1.65s ease-in-out infinite alternate; }
+    .move-body { transform-origin: center; animation: bob 1.65s ease-in-out infinite alternate; }
+    .arrow { animation: pulse 1.65s ease-in-out infinite alternate; }
+    @keyframes limb { from { transform: rotate(-7deg); } to { transform: rotate(9deg); } }
+    @keyframes bob { from { transform: translateY(0); } to { transform: translateY(8px); } }
+    @keyframes pulse { from { opacity: .45; } to { opacity: 1; } }
+
+    .steps { margin: 0; padding-left: 20px; color: #dce5f8; line-height: 1.45; font-size: 13px; }
+    .steps li { margin: 6px 0; }
+    .links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+    .links a {
+      text-decoration: none;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 9px;
+      color: #dfe9ff;
+      background: rgba(255,255,255,.045);
+    }
+    .links a:hover { border-color: rgba(122,168,255,.55); background: rgba(122,168,255,.11); }
+
+    .routine-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.045);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .routine-box h4 { margin: 0 0 8px; }
+    .routine-box ol { margin: 0; padding-left: 21px; color: #dce5f8; line-height: 1.45; }
+    .routine-box li { margin: 6px 0; }
+    .coverage { height: 9px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; margin-top: 7px; }
+    .coverage div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width .25s ease; }
+
+    .source-box {
+      margin-top: 12px;
+      border: 1px solid rgba(255,209,102,.2);
+      background: rgba(255,209,102,.06);
+      border-radius: 18px;
+      padding: 12px;
+      color: #fff7d9;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .source-box a { color: #fff2bd; }
+
+    .mobile-note { display: none; }
+
+    @media (max-width: 1120px) {
+      body { overflow: auto; }
+      .app { height: auto; min-height: 100vh; overflow: visible; }
+      main { grid-template-columns: 1fr; }
+      .atlas-card, .panel { height: auto; min-height: 620px; }
+      .body-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+      header { grid-template-columns: 1fr; }
+      .top-actions { justify-content: flex-start; }
+    }
+    @media (max-width: 650px) {
+      .app { padding: 8px; gap: 8px; }
+      .body-grid { grid-template-columns: 1fr; }
+      .view-card { min-height: 460px; }
+      .filterbar, .stats-row { grid-template-columns: 1fr; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .toolbar { align-items: stretch; flex-direction: column; }
+      .toolbar-left, .toolbar-right { width: 100%; }
+      .search { width: 100%; }
+      .mobile-note { display: block; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M32 6c8 0 12 5 12 12 0 4-2 7-5 9 9 3 15 12 15 24H10c0-12 6-21 15-24-3-2-5-5-5-9 0-7 4-12 12-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h1>Muscle Atlas Trainer</h1>
+          <div class="subtitle">Interactive anatomy-driven exercise finder for GitHub Pages. Select muscles, compare coverage, generate balanced routines.</div>
+        </div>
+      </div>
+      <div class="top-actions" role="toolbar" aria-label="Training mode">
+        <button class="pill mode-btn active" data-mode="finder">Finder</button>
+        <button class="pill mode-btn" data-mode="maxCoverage">Target most muscles</button>
+        <button class="pill mode-btn" data-mode="isolate">Isolate single</button>
+        <button class="pill mode-btn" data-mode="mobility">Healthy mobility</button>
+        <button class="pill mode-btn" data-mode="balanced">Balanced day</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="left atlas-card" aria-label="Human muscle atlas">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input id="muscleSearch" class="search" type="search" placeholder="Search muscle or exercise…" aria-label="Search muscle or exercise" />
+            <button class="ghost" id="toggleSelectMode">Multi-select: on</button>
+            <button class="ghost" id="clearSelection">Clear</button>
+            <button class="solid" id="selectAllMajor">Select all major</button>
+          </div>
+          <div class="toolbar-right">
+            <button class="ghost" id="copyRoutine">Copy routine</button>
+          </div>
+        </div>
+        <div class="body-stage">
+          <div class="body-grid" id="bodyGrid"></div>
+        </div>
+        <div class="atlas-foot">
+          <span>Click a region in front, back, left side, or right side view. Repeated regions share the same muscle selection.</span>
+          <span id="selectedCount">0 selected</span>
+        </div>
+      </section>
+
+      <aside class="right panel" aria-label="Exercise results and instructions">
+        <div class="filterbar">
+          <select id="typeFilter" aria-label="Exercise type filter">
+            <option value="all">All types</option>
+            <option value="strength">Strength</option>
+            <option value="mobility">Mobility</option>
+            <option value="stretch">Stretch</option>
+            <option value="activation">Activation</option>
+          </select>
+          <select id="equipmentFilter" aria-label="Equipment filter">
+            <option value="all">All equipment</option>
+            <option value="bodyweight">Bodyweight</option>
+            <option value="dumbbell">Dumbbell</option>
+            <option value="barbell">Barbell</option>
+            <option value="cable_band">Cable / band</option>
+            <option value="machine">Machine</option>
+          </select>
+          <select id="difficultyFilter" aria-label="Difficulty filter">
+            <option value="all">All levels</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+        <div class="stats-row">
+          <div class="stat"><b id="statExercises">0</b><span>matching exercises</span></div>
+          <div class="stat"><b id="statMuscles">0</b><span>selected muscles</span></div>
+          <div class="stat"><b id="statCoverage">0%</b><span>routine coverage</span></div>
+        </div>
+        <div class="content-scroll" id="results"></div>
+      </aside>
+    </main>
+  </div>
+
+<script>
+const MUSCLES = [
+  { id:'neck', name:'Neck / cervical stabilizers', region:'upper', view:'side' },
+  { id:'upper_traps', name:'Upper trapezius', region:'upper', view:'back' },
+  { id:'mid_traps', name:'Middle / lower trapezius', region:'upper', view:'back' },
+  { id:'rotator_cuff', name:'Rotator cuff', region:'upper', view:'back' },
+  { id:'front_delts', name:'Anterior deltoids', region:'upper', view:'front' },
+  { id:'lateral_delts', name:'Lateral deltoids', region:'upper', view:'front' },
+  { id:'rear_delts', name:'Posterior deltoids', region:'upper', view:'back' },
+  { id:'pecs', name:'Pectorals', region:'upper', view:'front' },
+  { id:'serratus', name:'Serratus anterior', region:'core', view:'front' },
+  { id:'lats', name:'Latissimus dorsi', region:'upper', view:'back' },
+  { id:'biceps', name:'Biceps / brachialis', region:'upper', view:'front' },
+  { id:'triceps', name:'Triceps', region:'upper', view:'back' },
+  { id:'forearms', name:'Forearms / grip', region:'upper', view:'front' },
+  { id:'abs', name:'Rectus abdominis / deep core', region:'core', view:'front' },
+  { id:'obliques', name:'Obliques / lateral core', region:'core', view:'front' },
+  { id:'erectors', name:'Spinal erectors / lumbar extensors', region:'core', view:'back' },
+  { id:'hip_flexors', name:'Hip flexors', region:'lower', view:'front' },
+  { id:'glutes', name:'Glutes', region:'lower', view:'back' },
+  { id:'abductors', name:'Hip abductors', region:'lower', view:'side' },
+  { id:'adductors', name:'Adductors', region:'lower', view:'front' },
+  { id:'quads', name:'Quadriceps', region:'lower', view:'front' },
+  { id:'hamstrings', name:'Hamstrings', region:'lower', view:'back' },
+  { id:'calves', name:'Calves / gastrocnemius-soleus', region:'lower', view:'back' },
+  { id:'tibialis', name:'Tibialis anterior / shin', region:'lower', view:'front' }
+];
+
+const EXERCISES = [
+  { id:'goblet-squat', name:'Goblet Squat', type:'strength', equipment:'dumbbell', difficulty:'beginner', pattern:'squat', primary:['quads','glutes'], secondary:['adductors','abs','erectors','calves'], summary:'Accessible full-body lower-body pattern with clear depth control and strong carryover to daily movement.', steps:['Hold the weight tight against the chest; feet roughly shoulder width.','Brace the trunk and sit between the hips without collapsing the knees inward.','Descend only as deep as you can control while keeping the heels down.','Drive the floor away and finish tall without leaning back.'], cautions:'Use a pain-free depth; elevate heels or reduce load if ankle mobility limits control.' },
+  { id:'front-squat', name:'Front Squat', type:'strength', equipment:'barbell', difficulty:'advanced', pattern:'squat', primary:['quads','abs'], secondary:['glutes','adductors','erectors','upper_traps'], summary:'Knee-dominant squat variation that heavily taxes trunk rigidity and quadriceps.', steps:['Rack the bar on the front shoulders; elbows high.','Inhale, brace, and sit down between the knees.','Keep the torso tall and bar path over midfoot.','Stand up by pushing through the whole foot.'], cautions:'Requires wrist, shoulder, and thoracic mobility; use straps or a cross-arm rack if needed.' },
+  { id:'reverse-lunge', name:'Reverse Lunge', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'lunge', primary:['quads','glutes'], secondary:['hamstrings','calves','abs','adductors'], summary:'Single-leg strength builder with lower knee shear than many forward-lunge variations.', steps:['Stand tall; step one leg backward.','Lower under control until the front thigh approaches parallel.','Keep the front knee tracking over the toes.','Push through the front foot to return to standing.'], cautions:'Hold support if balance limits quality.' },
+  { id:'step-up', name:'Step-Up', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'lunge', primary:['quads','glutes'], secondary:['hamstrings','calves','abs'], summary:'Practical unilateral pattern for hip and knee extension with adjustable height.', steps:['Place one foot fully on a stable box or step.','Lean slightly forward and keep the knee tracking over the toes.','Drive through the elevated foot; avoid pushing off the trailing leg.','Control the descent before switching sides.'], cautions:'Start below knee height; increase height only if pelvis stays level.' },
+  { id:'romanian-deadlift', name:'Romanian Deadlift', type:'strength', equipment:'barbell', difficulty:'intermediate', pattern:'hinge', primary:['hamstrings','glutes'], secondary:['erectors','lats','forearms','upper_traps'], summary:'Hip-hinge exercise emphasizing posterior-chain strength and hamstring loading.', steps:['Hold the weight close; soften the knees.','Push the hips back while keeping the spine neutral.','Stop when hamstrings limit range or the torso is near parallel.','Drive hips forward and finish tall.'], cautions:'The motion is a hinge, not a squat; keep load close to the body.' },
+  { id:'deadlift', name:'Deadlift', type:'strength', equipment:'barbell', difficulty:'advanced', pattern:'hinge', primary:['glutes','hamstrings','erectors'], secondary:['quads','lats','forearms','upper_traps','abs'], summary:'High-coverage hip-hinge lift that trains posterior chain, trunk bracing, grip, and leg drive.', steps:['Set the bar over midfoot and brace hard.','Hinge down, grip the bar, and pull slack out before lifting.','Push the floor away while keeping the bar close.','Lock out with hips and knees extended; lower under control.'], cautions:'Avoid maximal loading until hinge technique is consistent.' },
+  { id:'hip-thrust', name:'Hip Thrust / Glute Bridge', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'bridge', primary:['glutes'], secondary:['hamstrings','abs'], summary:'Glute-dominant hip extension with low technical complexity.', steps:['Set upper back on bench for hip thrust or floor for bridge.','Tuck ribs down and brace lightly.','Drive hips upward by squeezing glutes, not over-arching the low back.','Pause at top; lower under control.'], cautions:'Stop if lumbar extension substitutes for hip extension.' },
+  { id:'calf-raise', name:'Standing Calf Raise', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'ankle', primary:['calves'], secondary:['forearms'], summary:'Direct plantar-flexion strength for gastrocnemius and soleus.', steps:['Stand tall on floor or a step with support.','Rise onto the balls of the feet.','Pause briefly at the top.','Lower slowly through a comfortable range.'], cautions:'Use support for balance; progress to single-leg only after controlled bilateral reps.' },
+  { id:'tibialis-raise', name:'Tibialis Raise', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'ankle', primary:['tibialis'], secondary:['quads'], summary:'Direct anterior-shin work that balances calf-heavy programs.', steps:['Lean back against a wall with heels on the floor.','Lift toes toward the shins without bending the knees excessively.','Pause at the top and lower slowly.','Keep the movement controlled rather than bouncing.'], cautions:'Start with short sets because anterior shin muscles fatigue quickly.' },
+  { id:'push-up', name:'Push-Up', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'horizontal_press', primary:['pecs','triceps'], secondary:['front_delts','abs','serratus'], summary:'Scalable horizontal press that trains chest, arms, scapular control, and trunk stiffness.', steps:['Set hands under or slightly wider than shoulders.','Brace glutes and abs to keep a straight line.','Lower chest toward the floor while elbows track about 30–60 degrees from the torso.','Press away and finish by reaching slightly through the shoulders.'], cautions:'Use incline push-ups if trunk or shoulder control breaks down.' },
+  { id:'bench-press', name:'Bench Press', type:'strength', equipment:'barbell', difficulty:'intermediate', pattern:'horizontal_press', primary:['pecs','triceps'], secondary:['front_delts','lats','forearms'], summary:'Loaded horizontal pressing pattern for chest, triceps, and anterior shoulders.', steps:['Set shoulder blades back and down on the bench.','Grip the bar evenly and brace.','Lower under control to the lower chest or sternum area.','Press up while keeping wrists stacked and feet planted.'], cautions:'Use spotter or safety pins for heavy sets.' },
+  { id:'overhead-press', name:'Overhead Press', type:'strength', equipment:'dumbbell', difficulty:'intermediate', pattern:'vertical_press', primary:['front_delts','lateral_delts','triceps'], secondary:['upper_traps','abs','serratus'], summary:'Vertical press for shoulders, triceps, upper traps, and trunk bracing.', steps:['Start with weights at shoulder level and ribs down.','Brace and press upward without leaning back.','Finish with biceps near ears and shoulders upwardly rotated.','Lower with control to the starting position.'], cautions:'Use seated or landmine pressing if overhead range is restricted.' },
+  { id:'pull-up', name:'Pull-Up / Assisted Pull-Up', type:'strength', equipment:'bodyweight', difficulty:'intermediate', pattern:'vertical_pull', primary:['lats','biceps'], secondary:['forearms','mid_traps','rear_delts','abs'], summary:'Vertical pull for lats, arms, grip, and scapular depression strength.', steps:['Start from a controlled hang with ribs down.','Pull elbows toward the ribs.','Reach chin near bar without craning the neck.','Lower until arms are long while keeping shoulders controlled.'], cautions:'Use bands, machine assistance, or lat pulldown if reps are not controlled.' },
+  { id:'lat-pulldown', name:'Lat Pulldown', type:'strength', equipment:'machine', difficulty:'beginner', pattern:'vertical_pull', primary:['lats','biceps'], secondary:['forearms','mid_traps','rear_delts'], summary:'Scalable vertical pulling alternative to pull-ups.', steps:['Grip the bar and sit with thighs secured.','Start with shoulders reaching upward.','Pull elbows down toward the sides of the rib cage.','Return slowly without shrugging.'], cautions:'Pull to upper chest, not behind the neck.' },
+  { id:'one-arm-row', name:'One-Arm Dumbbell Row', type:'strength', equipment:'dumbbell', difficulty:'beginner', pattern:'horizontal_pull', primary:['lats','mid_traps'], secondary:['rear_delts','biceps','forearms','abs'], summary:'Horizontal pull with unilateral loading and clear shoulder-blade motion.', steps:['Support one hand and knee or use a staggered stance.','Let the shoulder blade reach slightly at the bottom.','Row the elbow toward the hip.','Lower slowly without twisting the torso.'], cautions:'Avoid yanking the weight upward with trunk rotation.' },
+  { id:'inverted-row', name:'Inverted Row', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'horizontal_pull', primary:['mid_traps','lats'], secondary:['rear_delts','biceps','forearms','abs'], summary:'Bodyweight row that scales with body angle and supports posture training.', steps:['Set a bar or rings around waist height.','Keep body in a straight line.','Pull chest toward the handle while squeezing shoulder blades.','Lower until arms are long.'], cautions:'Raise the bar or bend knees to reduce difficulty.' },
+  { id:'face-pull', name:'Face Pull', type:'strength', equipment:'cable_band', difficulty:'beginner', pattern:'scapular', primary:['rear_delts','rotator_cuff'], secondary:['mid_traps','upper_traps'], summary:'Scapular-retraction and external-rotation drill for posterior shoulder balance.', steps:['Set cable or band around face height.','Pull toward the face with elbows high.','Rotate hands back so forearms finish near vertical.','Return slowly while maintaining shoulder control.'], cautions:'Use light resistance; quality beats load.' },
+  { id:'lateral-raise', name:'Lateral Raise', type:'strength', equipment:'dumbbell', difficulty:'beginner', pattern:'isolation', primary:['lateral_delts'], secondary:['upper_traps','rotator_cuff'], summary:'Shoulder abduction isolation for lateral deltoid emphasis.', steps:['Hold light weights at sides with slight elbow bend.','Raise arms out to the side until near shoulder height.','Keep ribs down and avoid swinging.','Lower slowly.'], cautions:'Use lighter load if upper traps dominate the movement.' },
+  { id:'biceps-curl', name:'Biceps Curl', type:'strength', equipment:'dumbbell', difficulty:'beginner', pattern:'isolation', primary:['biceps'], secondary:['forearms'], summary:'Direct elbow-flexion exercise for biceps and brachialis.', steps:['Stand tall with arms at sides.','Curl without swinging the torso.','Pause briefly near the top.','Lower fully under control.'], cautions:'Keep wrists neutral if elbows or wrists feel irritated.' },
+  { id:'triceps-pressdown', name:'Triceps Pressdown', type:'strength', equipment:'cable_band', difficulty:'beginner', pattern:'isolation', primary:['triceps'], secondary:['forearms'], summary:'Direct elbow-extension exercise with easy load control.', steps:['Anchor cable or band above head height.','Pin elbows near the ribs.','Extend elbows until arms are straight.','Return slowly without letting shoulders drift forward.'], cautions:'Keep resistance light enough to avoid elbow discomfort.' },
+  { id:'farmer-carry', name:'Farmer Carry', type:'strength', equipment:'dumbbell', difficulty:'beginner', pattern:'carry', primary:['forearms','upper_traps','abs'], secondary:['obliques','glutes','calves','erectors'], summary:'Loaded walking drill for grip, trunk stiffness, posture, and gait.', steps:['Pick up two weights safely with a hinge.','Stand tall with ribs stacked over pelvis.','Walk slowly without leaning or shrugging excessively.','Set weights down with control.'], cautions:'Keep load symmetrical unless intentionally training suitcase carries.' },
+  { id:'plank', name:'Front Plank', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'core', primary:['abs'], secondary:['obliques','glutes','front_delts','serratus'], summary:'Anti-extension core drill emphasizing rib-pelvis control.', steps:['Place elbows under shoulders.','Tuck pelvis slightly and squeeze glutes.','Keep a straight line from head to heels.','Breathe behind the brace without sagging.'], cautions:'End the set when low back position fails.' },
+  { id:'side-plank', name:'Side Plank', type:'strength', equipment:'bodyweight', difficulty:'beginner', pattern:'core', primary:['obliques'], secondary:['abs','glutes','lateral_delts','abductors'], summary:'Lateral-chain stability drill for obliques, glute medius, and shoulder support.', steps:['Set elbow under shoulder and stack feet or stagger them.','Lift hips until the body forms a straight line.','Keep ribs down and avoid rolling forward.','Hold while breathing steadily; switch sides.'], cautions:'Start from knees if shoulder or hip control is limited.' },
+  { id:'pallof-press', name:'Pallof Press', type:'strength', equipment:'cable_band', difficulty:'beginner', pattern:'core', primary:['obliques','abs'], secondary:['glutes','lateral_delts'], summary:'Anti-rotation drill that teaches trunk control against sideways pull.', steps:['Stand side-on to a cable or band anchor.','Hold handle at sternum and brace.','Press arms forward without letting the torso rotate.','Pause, return, and repeat both sides.'], cautions:'Move farther from anchor only if pelvis and ribs stay quiet.' },
+  { id:'dead-bug', name:'Dead Bug', type:'activation', equipment:'bodyweight', difficulty:'beginner', pattern:'core', primary:['abs'], secondary:['hip_flexors','obliques'], summary:'Low-load core coordination drill for trunk control while limbs move.', steps:['Lie on back with hips and knees at 90 degrees.','Press low ribs gently toward the floor.','Extend opposite arm and leg without arching.','Return and alternate sides slowly.'], cautions:'Shorten the range if the low back lifts.' },
+  { id:'bird-dog', name:'Bird Dog', type:'activation', equipment:'bodyweight', difficulty:'beginner', pattern:'core', primary:['erectors','glutes'], secondary:['abs','rear_delts','hamstrings'], summary:'Spine-friendly posterior-chain and anti-rotation coordination drill.', steps:['Start on hands and knees.','Brace lightly and extend opposite arm and leg.','Pause without rotating the pelvis.','Return slowly and switch sides.'], cautions:'Keep range smaller if balance or lumbar control is poor.' },
+  { id:'scapular-wall-slide', name:'Scapular Wall Slide', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['rotator_cuff','serratus'], secondary:['mid_traps','lateral_delts'], summary:'Shoulder mobility and upward-rotation drill with low load.', steps:['Stand with back near a wall and ribs down.','Slide forearms upward while keeping shoulders relaxed.','Reach slightly at the top without arching.','Lower slowly and repeat.'], cautions:'Use pain-free range; do not force overhead position.' },
+  { id:'shoulder-cars', name:'Shoulder Controlled Articular Rotations', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['rotator_cuff','front_delts','lateral_delts','rear_delts'], secondary:['serratus','upper_traps'], summary:'Slow shoulder-capsule control through available range.', steps:['Stand tall and brace lightly.','Move one arm in the largest slow pain-free circle.','Rotate the arm as needed to continue the circle.','Keep ribs and pelvis quiet; repeat both sides.'], cautions:'No sharp pain; shrink the circle if pinching occurs.' },
+  { id:'cat-cow', name:'Cat-Cow', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['erectors','abs'], secondary:['neck','mid_traps'], summary:'Gentle spinal flexion-extension mobility drill.', steps:['Start on hands and knees.','Exhale and round the spine upward.','Inhale and extend gently through the spine.','Move slowly segment by segment.'], cautions:'Stay gentle; this is not a loaded stretch.' },
+  { id:'thoracic-open-book', name:'Thoracic Open Book', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['mid_traps','erectors','obliques'], secondary:['pecs','rear_delts'], summary:'Side-lying thoracic rotation drill that also opens chest and shoulder.', steps:['Lie on side with knees bent and stacked.','Reach top arm forward.','Rotate the upper back and open the arm toward the floor behind you.','Breathe, return, and repeat both sides.'], cautions:'Keep knees stacked to avoid substituting lumbar rotation.' },
+  { id:'worlds-greatest-stretch', name:'World’s Greatest Stretch', type:'mobility', equipment:'bodyweight', difficulty:'intermediate', pattern:'mobility', primary:['hip_flexors','glutes','hamstrings','obliques'], secondary:['adductors','calves','erectors'], summary:'High-coverage mobility flow for hips, hamstrings, calves, and thoracic rotation.', steps:['Step into a long lunge with both hands inside the front foot.','Sink hips forward gently while keeping the back leg long.','Rotate the chest toward the front leg and reach upward.','Return, step back, and alternate sides.'], cautions:'Use blocks or hands on an elevated surface if floor range is limited.' },
+  { id:'couch-stretch', name:'Couch Stretch', type:'stretch', equipment:'bodyweight', difficulty:'intermediate', pattern:'mobility', primary:['hip_flexors','quads'], secondary:['abs','glutes'], summary:'Anterior hip and quad stretch for people who sit often or squat/lunge heavily.', steps:['Place one knee near a wall or couch with shin vertical if tolerated.','Bring the other foot forward into a half-kneeling stance.','Tuck pelvis slightly and squeeze the rear-side glute.','Hold steady while breathing; switch sides.'], cautions:'Do not force knee flexion; pad the knee and reduce range if needed.' },
+  { id:'ninety-ninety', name:'90/90 Hip Switch', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['glutes','abductors','adductors'], secondary:['hip_flexors','obliques'], summary:'Hip internal/external rotation mobility with controlled transitions.', steps:['Sit with both knees bent around 90 degrees.','Rotate knees from one side to the other under control.','Stay tall and avoid collapsing through the spine.','Pause on each side and breathe.'], cautions:'Use hands behind you if hips cramp or back rounds.' },
+  { id:'ankle-rock', name:'Knee-to-Wall Ankle Rock', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'ankle', primary:['calves','tibialis'], secondary:['quads'], summary:'Dorsiflexion mobility drill for squats, lunges, and gait.', steps:['Place toes a few inches from a wall.','Drive the knee toward the wall while heel stays down.','Return slowly and repeat.','Move foot farther away only if the heel stays planted.'], cautions:'Keep movement pain-free around the Achilles and front ankle.' },
+  { id:'hamstring-floss', name:'Hamstring Floss', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['hamstrings'], secondary:['calves','glutes'], summary:'Dynamic posterior-leg mobility without aggressive static stretching.', steps:['Lie on back or stand with one heel elevated.','Extend and bend the knee smoothly through comfortable range.','Keep spine neutral and avoid forcing end range.','Repeat both sides.'], cautions:'Stop if nerve-like tingling or sharp symptoms appear.' },
+  { id:'doorway-pec', name:'Doorway Pec Stretch', type:'stretch', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['pecs'], secondary:['front_delts','biceps'], summary:'Chest and anterior-shoulder opening stretch.', steps:['Place forearm on a doorway at roughly shoulder height.','Step through gently until a mild chest stretch appears.','Keep ribs down and neck relaxed.','Hold, breathe, and switch sides.'], cautions:'Avoid numbness, tingling, or anterior shoulder pain.' },
+  { id:'lat-prayer', name:'Lat Prayer Stretch', type:'stretch', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['lats'], secondary:['serratus','triceps','erectors'], summary:'Overhead lat and shoulder-flexion stretch.', steps:['Kneel in front of a bench or chair.','Place elbows or hands on the surface.','Sit hips back while keeping ribs controlled.','Breathe into the sides of the rib cage.'], cautions:'Avoid forcing the shoulders into pain.' },
+  { id:'wrist-rock', name:'Wrist Extension / Flexion Rock', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['forearms'], secondary:['biceps','triceps'], summary:'Forearm and wrist preparation for pressing, carries, and floor-based work.', steps:['Start on hands and knees.','Gently rock shoulders forward over hands for wrist extension.','Turn hands or flip palms carefully for flexion variation.','Use small ranges and slow breathing.'], cautions:'Reduce load by doing it at a wall or table if wrists are sensitive.' },
+  { id:'neck-cars', name:'Neck Controlled Rotations', type:'mobility', equipment:'bodyweight', difficulty:'beginner', pattern:'mobility', primary:['neck'], secondary:['upper_traps'], summary:'Gentle cervical mobility and awareness drill.', steps:['Sit or stand tall.','Slowly draw a small pain-free circle with the nose.','Keep shoulders relaxed and breathing steady.','Reverse direction after several reps.'], cautions:'Keep the range small; stop for dizziness, radiating symptoms, or sharp pain.' },
+  { id:'hip-airplane', name:'Hip Airplane', type:'mobility', equipment:'bodyweight', difficulty:'advanced', pattern:'balance', primary:['glutes','abductors'], secondary:['hamstrings','abs','adductors'], summary:'Advanced hip-control drill for frontal/transverse-plane stability.', steps:['Stand on one leg and hinge slightly at the hip.','Open the pelvis outward while keeping the stance knee controlled.','Rotate inward under control.','Use wall support until balance is reliable.'], cautions:'Do not chase range at the cost of knee or pelvic control.' }
+];
+
+const SOURCE_BASE = [
+  { label:'CDC adult activity guidelines', url:'https://www.cdc.gov/physical-activity-basics/guidelines/adults.html' },
+  { label:'ACSM physical activity guidelines', url:'https://acsm.org/education-resources/trending-topics-resources/physical-activity-guidelines/' },
+  { label:'WHO physical activity', url:'https://www.who.int/initiatives/behealthy/physical-activity' },
+  { label:'NHS flexibility exercises', url:'https://www.nhs.uk/live-well/exercise/flexibility-exercises/' },
+  { label:'Mayo Clinic stretching safety', url:'https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/stretching/art-20546848' }
+];
+
+const BODY_REGIONS = {
+  front: [
+    ['ellipse',{cx:100,cy:38,rx:20,ry:24},'neck'], ['path',{d:'M80 64 Q100 78 120 64 L128 105 Q114 118 100 118 Q86 118 72 105 Z'},'pecs'],
+    ['path',{d:'M72 73 Q52 84 44 110 L62 121 Q72 104 80 82 Z'},'front_delts'], ['path',{d:'M128 73 Q148 84 156 110 L138 121 Q128 104 120 82 Z'},'front_delts'],
+    ['path',{d:'M62 121 Q51 145 49 181 L66 184 Q73 149 78 124 Z'},'biceps'], ['path',{d:'M138 121 Q149 145 151 181 L134 184 Q127 149 122 124 Z'},'biceps'],
+    ['path',{d:'M48 181 Q43 217 44 252 L62 252 Q65 218 66 184 Z'},'forearms'], ['path',{d:'M152 181 Q157 217 156 252 L138 252 Q135 218 134 184 Z'},'forearms'],
+    ['path',{d:'M86 118 L114 118 L119 179 L81 179 Z'},'abs'], ['path',{d:'M72 112 L86 118 L81 179 L70 169 Q66 139 72 112 Z'},'serratus'], ['path',{d:'M128 112 L114 118 L119 179 L130 169 Q134 139 128 112 Z'},'serratus'],
+    ['path',{d:'M70 169 L81 179 L82 216 L67 221 Q63 190 70 169 Z'},'obliques'], ['path',{d:'M130 169 L119 179 L118 216 L133 221 Q137 190 130 169 Z'},'obliques'],
+    ['path',{d:'M82 216 L100 218 L96 340 L70 340 Q65 275 82 216 Z'},'quads'], ['path',{d:'M100 218 L118 216 Q135 275 130 340 L104 340 Z'},'quads'],
+    ['path',{d:'M72 230 Q53 270 55 323 L70 340 Q70 276 82 216 Z'},'adductors'], ['path',{d:'M128 230 Q147 270 145 323 L130 340 Q130 276 118 216 Z'},'adductors'],
+    ['path',{d:'M82 217 L118 217 L116 240 Q100 250 84 240 Z'},'hip_flexors'],
+    ['path',{d:'M70 340 L96 340 L92 424 L67 424 Q63 380 70 340 Z'},'tibialis'], ['path',{d:'M104 340 L130 340 Q137 380 133 424 L108 424 Z'},'tibialis'],
+    ['path',{d:'M67 424 L92 424 L88 462 L62 462 Q63 441 67 424 Z'},'calves'], ['path',{d:'M108 424 L133 424 Q137 441 138 462 L112 462 Z'},'calves']
+  ],
+  back: [
+    ['ellipse',{cx:100,cy:38,rx:20,ry:24},'neck'], ['path',{d:'M79 62 Q100 82 121 62 L130 95 Q100 118 70 95 Z'},'upper_traps'],
+    ['path',{d:'M72 92 Q100 120 128 92 L122 166 Q100 190 78 166 Z'},'mid_traps'],
+    ['path',{d:'M70 92 Q50 82 42 112 L61 126 Q71 111 80 95 Z'},'rear_delts'], ['path',{d:'M130 92 Q150 82 158 112 L139 126 Q129 111 120 95 Z'},'rear_delts'],
+    ['path',{d:'M78 111 Q58 136 56 183 L75 188 Q87 154 92 122 Z'},'lats'], ['path',{d:'M122 111 Q142 136 144 183 L125 188 Q113 154 108 122 Z'},'lats'],
+    ['path',{d:'M56 126 Q49 154 49 186 L66 186 Q70 151 75 127 Z'},'triceps'], ['path',{d:'M144 126 Q151 154 151 186 L134 186 Q130 151 125 127 Z'},'triceps'],
+    ['path',{d:'M48 185 Q43 218 44 252 L62 252 Q65 219 66 186 Z'},'forearms'], ['path',{d:'M152 185 Q157 218 156 252 L138 252 Q135 219 134 186 Z'},'forearms'],
+    ['path',{d:'M80 166 Q100 190 120 166 L124 224 Q100 238 76 224 Z'},'erectors'],
+    ['path',{d:'M76 224 Q100 242 124 224 L132 270 Q100 296 68 270 Z'},'glutes'],
+    ['path',{d:'M70 270 L97 282 L94 386 L67 386 Q63 327 70 270 Z'},'hamstrings'], ['path',{d:'M130 270 L103 282 L106 386 L133 386 Q137 327 130 270 Z'},'hamstrings'],
+    ['path',{d:'M68 385 L94 385 L91 462 L63 462 Q62 420 68 385 Z'},'calves'], ['path',{d:'M106 385 L132 385 Q138 420 137 462 L109 462 Z'},'calves']
+  ],
+  left: [
+    ['ellipse',{cx:96,cy:38,rx:18,ry:24},'neck'], ['path',{d:'M87 66 Q101 71 109 82 L103 174 L82 174 L78 93 Z'},'pecs'],
+    ['path',{d:'M76 78 Q56 93 53 127 L69 132 Q76 107 88 78 Z'},'lateral_delts'], ['path',{d:'M69 132 Q57 154 58 187 L74 187 Q78 154 80 132 Z'},'biceps'],
+    ['path',{d:'M74 187 Q70 219 72 254 L89 254 Q90 219 88 187 Z'},'forearms'],
+    ['path',{d:'M104 86 Q123 120 119 171 L104 174 Z'},'lats'], ['path',{d:'M82 174 L104 174 L106 224 L83 222 Z'},'abs'],
+    ['path',{d:'M104 174 L121 190 L123 224 L106 224 Z'},'obliques'], ['path',{d:'M83 222 Q103 246 122 224 L126 276 Q104 291 80 276 Z'},'glutes'],
+    ['path',{d:'M80 224 L101 230 L97 336 L73 336 Q66 277 80 224 Z'},'quads'], ['path',{d:'M104 230 L126 276 Q132 329 119 386 L96 386 Z'},'hamstrings'],
+    ['path',{d:'M73 336 L97 336 L95 420 L70 420 Q66 378 73 336 Z'},'tibialis'], ['path',{d:'M96 386 L119 386 Q125 423 124 462 L98 462 Z'},'calves'],
+    ['path',{d:'M121 190 Q137 219 136 266 L122 266 Q123 222 121 190 Z'},'abductors'], ['path',{d:'M84 225 Q77 262 78 307 L94 307 Q94 264 101 230 Z'},'hip_flexors']
+  ],
+  right: []
+};
+BODY_REGIONS.right = BODY_REGIONS.left;
+
+let selected = new Set();
+let activeMode = 'finder';
+let multiSelect = true;
+let openedExercise = null;
+let lastRoutine = [];
+let previewExercise = null;
+
+const muscleById = Object.fromEntries(MUSCLES.map(m => [m.id, m]));
+const q = (sel, root=document) => root.querySelector(sel);
+const qa = (sel, root=document) => [...root.querySelectorAll(sel)];
+
+function attrsToString(attrs){ return Object.entries(attrs).map(([k,v]) => `${k}="${v}"`).join(' '); }
+function regionShape(tag, attrs, muscle){
+  const label = muscleById[muscle]?.name || muscle;
+  return `<${tag} ${attrsToString(attrs)} class="muscle-region" data-muscle="${muscle}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"><title>${escapeHtml(label)}</title></${tag}>`;
+}
+function renderBody(){
+  const bodyGrid = q('#bodyGrid');
+  const views = [
+    ['front','Front'], ['back','Back'], ['left','Left side'], ['right','Right side']
+  ];
+  bodyGrid.innerHTML = views.map(([key,label]) => `
+    <div class="view-card">
+      <h2>${label}</h2>
+      <svg viewBox="0 0 200 490" aria-label="${label} body view">
+        <path class="skeleton" d="M77 64 Q100 82 123 64 L137 113 Q154 125 158 183 L157 254 Q151 264 139 255 L134 187 Q129 231 126 277 L137 462 L108 462 L100 348 L92 462 L63 462 L74 277 Q71 231 66 187 L61 255 Q49 264 43 254 L42 183 Q46 125 63 113 Z"/>
+        <circle class="joint" cx="100" cy="38" r="22"/>
+        ${key === 'right' ? `<g transform="translate(200 0) scale(-1 1)">${BODY_REGIONS.left.map(r => regionShape(...r)).join('')}</g>` : BODY_REGIONS[key].map(r => regionShape(...r)).join('')}
+      </svg>
+    </div>`).join('');
+  qa('.muscle-region').forEach(el => {
+    el.addEventListener('click', () => toggleMuscle(el.dataset.muscle));
+    el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMuscle(el.dataset.muscle); }});
+    el.addEventListener('mouseenter', () => showMusclePreview(el.dataset.muscle));
+    el.addEventListener('mouseleave', () => updateBodyClasses());
+  });
+}
+
+function toggleMuscle(id){
+  if(!multiSelect) selected.clear();
+  if(selected.has(id)) selected.delete(id); else selected.add(id);
+  previewExercise = null;
+  openedExercise = null;
+  updateAll();
+}
+
+function showMusclePreview(id){
+  qa('.muscle-region').forEach(el => {
+    el.classList.toggle('secondary-hit', el.dataset.muscle === id && !selected.has(id));
+  });
+}
+
+function updateBodyClasses(){
+  const primary = previewExercise ? new Set(previewExercise.primary) : new Set();
+  const secondary = previewExercise ? new Set(previewExercise.secondary) : new Set();
+  qa('.muscle-region').forEach(el => {
+    const id = el.dataset.muscle;
+    el.classList.toggle('selected', selected.has(id) && !previewExercise);
+    el.classList.toggle('primary-hit', primary.has(id));
+    el.classList.toggle('secondary-hit', !primary.has(id) && secondary.has(id));
+    el.classList.toggle('dimmed', Boolean(previewExercise) && !primary.has(id) && !secondary.has(id));
+  });
+  q('#selectedCount').textContent = `${selected.size} selected`;
+}
+
+function filters(){
+  return {
+    type: q('#typeFilter').value,
+    equipment: q('#equipmentFilter').value,
+    difficulty: q('#difficultyFilter').value,
+    search: q('#muscleSearch').value.trim().toLowerCase()
+  };
+}
+function exerciseMatchesFilters(ex, f){
+  if(f.type !== 'all' && ex.type !== f.type) return false;
+  if(f.equipment !== 'all' && ex.equipment !== f.equipment) return false;
+  if(f.difficulty !== 'all' && ex.difficulty !== f.difficulty) return false;
+  if(f.search){
+    const hay = [ex.name, ex.summary, ex.type, ex.equipment, ex.difficulty, ...ex.primary.map(id => muscleById[id]?.name), ...ex.secondary.map(id => muscleById[id]?.name)].join(' ').toLowerCase();
+    const muscleHay = MUSCLES.map(m => `${m.id} ${m.name}`).join(' ').toLowerCase();
+    if(!hay.includes(f.search) && !muscleHay.includes(f.search)) return false;
+  }
+  return true;
+}
+function exerciseScore(ex, target = selected){
+  if(target.size === 0) return ex.primary.length * 2 + ex.secondary.length;
+  let score = 0;
+  ex.primary.forEach(m => { if(target.has(m)) score += 3; });
+  ex.secondary.forEach(m => { if(target.has(m)) score += 1; });
+  return score;
+}
+function allTouched(ex){ return [...new Set([...ex.primary, ...ex.secondary])]; }
+function selectedTarget(){ return selected.size ? selected : new Set(MUSCLES.map(m=>m.id)); }
+
+function applyMode(list){
+  const target = selectedTarget();
+  if(activeMode === 'finder'){
+    return list.filter(ex => selected.size === 0 || exerciseScore(ex) > 0)
+      .sort((a,b) => exerciseScore(b) - exerciseScore(a) || b.primary.length - a.primary.length || a.name.localeCompare(b.name));
+  }
+  if(activeMode === 'maxCoverage'){
+    return list.filter(ex => ex.type === 'strength' || ex.type === 'activation')
+      .filter(ex => selected.size === 0 || exerciseScore(ex, target) > 0)
+      .sort((a,b) => coverageCount(b, target) - coverageCount(a, target) || exerciseScore(b,target) - exerciseScore(a,target));
+  }
+  if(activeMode === 'isolate'){
+    return list.filter(ex => ex.type === 'strength' || ex.type === 'activation')
+      .filter(ex => ex.primary.length === 1)
+      .filter(ex => selected.size === 0 || selected.has(ex.primary[0]))
+      .sort((a,b) => exerciseScore(b,target) - exerciseScore(a,target) || a.name.localeCompare(b.name));
+  }
+  if(activeMode === 'mobility'){
+    return list.filter(ex => ex.type === 'mobility' || ex.type === 'stretch' || ex.type === 'activation')
+      .filter(ex => selected.size === 0 || exerciseScore(ex,target) > 0)
+      .sort((a,b) => coverageCount(b,target) - coverageCount(a,target) || a.name.localeCompare(b.name));
+  }
+  if(activeMode === 'balanced'){
+    const ids = new Set(buildBalancedRoutine(list).map(ex => ex.id));
+    return list.filter(ex => ids.has(ex.id)).concat(list.filter(ex => !ids.has(ex.id))).slice(0, 18);
+  }
+  return list;
+}
+function coverageCount(ex, target){ return allTouched(ex).filter(m => target.has(m)).length; }
+
+function buildCoverageRoutine(list){
+  const target = selectedTarget();
+  const allowed = list.filter(ex => (ex.type === 'strength' || ex.type === 'activation') && coverageCount(ex,target) > 0);
+  const routine = [];
+  const covered = new Set();
+  for(let i=0;i<7;i++){
+    let best = null, bestGain = -1, bestScore = -1;
+    allowed.forEach(ex => {
+      if(routine.includes(ex)) return;
+      const gain = allTouched(ex).filter(m => target.has(m) && !covered.has(m)).length;
+      const sc = exerciseScore(ex,target);
+      if(gain > bestGain || (gain === bestGain && sc > bestScore)) { best = ex; bestGain = gain; bestScore = sc; }
+    });
+    if(!best || bestGain <= 0) break;
+    routine.push(best); allTouched(best).forEach(m => { if(target.has(m)) covered.add(m); });
+  }
+  return routine;
+}
+
+function buildMobilityRoutine(list){
+  const target = selectedTarget();
+  const mobility = list.filter(ex => (ex.type === 'mobility' || ex.type === 'stretch' || ex.type === 'activation') && coverageCount(ex,target) > 0);
+  const routine = [];
+  const covered = new Set();
+  for(let i=0;i<8;i++){
+    let best = null, gainBest = -1;
+    mobility.forEach(ex => {
+      if(routine.includes(ex)) return;
+      const gain = allTouched(ex).filter(m => target.has(m) && !covered.has(m)).length;
+      if(gain > gainBest) { best = ex; gainBest = gain; }
+    });
+    if(!best) break;
+    routine.push(best); allTouched(best).forEach(m => { if(target.has(m)) covered.add(m); });
+    if(selected.size && covered.size >= target.size) break;
+  }
+  return routine.slice(0, 7);
+}
+
+function buildBalancedRoutine(list){
+  const f = ex => list.find(e => e.id === ex);
+  const targetList = selected.size ? list.filter(ex => exerciseScore(ex, selected) > 0) : list;
+  const pick = (...ids) => ids.map(f).find(Boolean);
+  const routine = [];
+  const add = ex => { if(ex && !routine.includes(ex)) routine.push(ex); };
+  if(selected.size){
+    buildCoverageRoutine(targetList).slice(0, 5).forEach(add);
+    add(targetList.find(ex => ex.type === 'mobility' && exerciseScore(ex,selected)>0));
+    return routine.slice(0,7);
+  }
+  ['goblet-squat','romanian-deadlift','push-up','one-arm-row','overhead-press','side-plank','worlds-greatest-stretch'].forEach(id => add(pick(id)));
+  return routine.filter(Boolean);
+}
+
+function currentList(){
+  const f = filters();
+  return applyMode(EXERCISES.filter(ex => exerciseMatchesFilters(ex, f)));
+}
+
+function generateRoutine(list){
+  if(activeMode === 'mobility') return buildMobilityRoutine(list);
+  if(activeMode === 'balanced') return buildBalancedRoutine(EXERCISES.filter(ex => exerciseMatchesFilters(ex, {...filters(), type:'all'})));
+  if(activeMode === 'isolate') return list.slice(0, Math.min(6, list.length));
+  return buildCoverageRoutine(EXERCISES.filter(ex => exerciseMatchesFilters(ex, {...filters(), type:'all'})));
+}
+
+function coveragePercent(routine){
+  const target = selectedTarget();
+  const covered = new Set();
+  routine.forEach(ex => allTouched(ex).forEach(m => { if(target.has(m)) covered.add(m); }));
+  return target.size ? Math.round((covered.size / target.size) * 100) : 0;
+}
+
+function renderSelectedChips(){
+  if(selected.size === 0) return '<div class="chips"><span class="chip warn">No muscle selected: showing general full-body options</span></div>';
+  return `<div class="chips">${[...selected].map(id => `<button class="chip primary" data-remove="${id}" title="Remove ${escapeHtml(muscleById[id].name)}">${escapeHtml(muscleById[id].name)} ×</button>`).join('')}</div>`;
+}
+
+function renderRoutine(routine){
+  if(!routine.length) return '';
+  const pct = coveragePercent(routine);
+  const label = activeMode === 'mobility' ? 'Healthy mobility sequence' : activeMode === 'isolate' ? 'Isolation shortlist' : activeMode === 'balanced' ? 'Balanced training day' : 'Coverage-optimized routine';
+  const dose = activeMode === 'mobility' ? 'Use 30–45 seconds or 5–8 slow reps per side. Keep everything pain-free.' : 'Use 2–4 controlled sets. Stop 1–3 reps before form failure unless you know your recovery and technique are solid.';
+  return `<div class="routine-box">
+    <h4>${label}</h4>
+    <ol>${routine.map(ex => `<li><b>${escapeHtml(ex.name)}</b> <span style="color:var(--muted)">— ${escapeHtml(setText(ex))}</span></li>`).join('')}</ol>
+    <div class="coverage" title="Target coverage"><div style="width:${pct}%"></div></div>
+    <p style="margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.45">${dose}</p>
+  </div>`;
+}
+
+function setText(ex){
+  if(ex.type === 'mobility') return '5–8 slow reps / side';
+  if(ex.type === 'stretch') return '20–45 sec / side';
+  if(ex.type === 'activation') return '1–3 × 6–12 controlled reps';
+  if(ex.pattern === 'carry') return '3–5 walks of 20–40 m';
+  if(ex.pattern === 'core') return '2–4 holds or sets of 20–45 sec';
+  return '2–4 × 6–12 reps';
+}
+
+function renderExercises(list){
+  if(!list.length) return '<div class="routine-box"><h4>No matches</h4><p style="color:var(--muted);line-height:1.45">Relax filters or clear selected muscles. The data is local, so nothing is being fetched from a server.</p></div>';
+  return `<div class="exercise-list">${list.map(ex => renderExercise(ex)).join('')}</div>`;
+}
+
+function renderExercise(ex){
+  const open = openedExercise === ex.id;
+  const score = exerciseScore(ex);
+  const primary = ex.primary.map(id => muscleById[id]?.name || id);
+  const secondary = ex.secondary.map(id => muscleById[id]?.name || id);
+  const all = [...primary, ...secondary].slice(0, 8).join(', ');
+  return `<article class="exercise ${open ? 'open' : ''}" data-exercise="${ex.id}">
+    <div class="ex-head" role="button" tabindex="0" aria-label="Open ${escapeHtml(ex.name)}">
+      <div>
+        <div class="ex-title">${escapeHtml(ex.name)}</div>
+        <div class="ex-sub">${escapeHtml(ex.summary)}<br><b>Targets:</b> ${escapeHtml(all)}</div>
+      </div>
+      <div class="score"><b>${score}</b><span>match</span></div>
+    </div>
+    <div class="ex-tags">
+      <span class="chip">${escapeHtml(ex.type)}</span><span class="chip">${escapeHtml(ex.equipment)}</span><span class="chip">${escapeHtml(ex.difficulty)}</span><span class="chip">${escapeHtml(setText(ex))}</span>
+    </div>
+    <div class="ex-body">
+      <div class="detail-grid">
+        <div class="demo">${demoSvg(ex)}</div>
+        <div>
+          <div class="chips">
+            ${ex.primary.map(id => `<span class="chip primary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
+            ${ex.secondary.map(id => `<span class="chip secondary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
+          </div>
+          <ol class="steps">${ex.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
+          <p style="color:var(--muted);font-size:12px;line-height:1.45;margin:10px 0 0"><b>Caution:</b> ${escapeHtml(ex.cautions)}</p>
+          <div class="links">${researchLinks(ex).map(l => `<a target="_blank" rel="noopener noreferrer" href="${l.url}">${escapeHtml(l.label)}</a>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function researchLinks(ex){
+  const muscles = ex.primary.map(id => muscleById[id].name.split('/')[0].trim()).join(' ');
+  const qBase = encodeURIComponent(`${ex.name} ${muscles} exercise training`);
+  const qStudy = encodeURIComponent(`${ex.name} ${muscles} electromyography resistance training`);
+  const technique = encodeURIComponent(ex.name);
+  const links = [
+    { label:'PubMed studies', url:`https://pubmed.ncbi.nlm.nih.gov/?term=${qStudy}` },
+    { label:'Google Scholar', url:`https://scholar.google.com/scholar?q=${qBase}` },
+    { label:'ExRx directory', url:'https://exrx.net/Lists/Directory' },
+    { label:'ACE exercise library search', url:`https://www.acefitness.org/resources/everyone/exercise-library/?search=${technique}` }
+  ];
+  if(ex.type === 'mobility' || ex.type === 'stretch') links.push({ label:'NHS mobility guidance', url:'https://www.nhs.uk/live-well/exercise/flexibility-exercises/' });
+  return links;
+}
+
+function demoSvg(ex){
+  const p = ex.pattern;
+  const label = escapeHtml(ex.pattern.replace('_',' '));
+  const torsoY = p === 'squat' || p === 'lunge' ? 60 : 46;
+  const armPose = p.includes('pull') ? 'M78 66 L52 45 M122 66 L148 45' : p.includes('press') ? 'M78 66 L62 31 M122 66 L138 31' : p === 'carry' ? 'M78 66 L59 116 M122 66 L141 116' : 'M78 66 L64 98 M122 66 L136 98';
+  const legPose = p === 'squat' ? 'M91 113 L72 157 L90 202 M109 113 L128 157 L110 202' : p === 'lunge' ? 'M95 113 L65 156 L60 207 M105 113 L142 148 L155 198' : p === 'hinge' ? 'M91 113 L86 164 L90 212 M109 113 L115 164 L111 212' : p === 'ankle' ? 'M91 113 L88 170 L75 211 M109 113 L112 170 L126 211' : 'M91 113 L84 162 L76 211 M109 113 L118 162 L128 211';
+  const arrow = p === 'mobility' || p === 'balance' ? '<path class="arrow" d="M45 35 Q100 6 155 35" fill="none" stroke="var(--mobility)" stroke-width="5" stroke-linecap="round"/><path d="M151 22 L159 36 L143 38" fill="none" stroke="var(--mobility)" stroke-width="4" stroke-linecap="round"/>' : '<path class="arrow" d="M160 55 v70" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M149 116 l11 16 11-16" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>';
+  return `<svg viewBox="0 0 200 230" aria-label="Exercise visualization: ${escapeHtml(ex.name)}">
+    <rect x="0" y="0" width="200" height="230" fill="rgba(255,255,255,.015)"/>
+    ${arrow}
+    <g class="move-body" fill="none" stroke="rgba(242,246,255,.86)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="100" cy="30" r="16" fill="none"/>
+      <path d="M100 48 L100 ${torsoY+66}"/>
+      <path class="move-limb" d="${armPose}"/>
+      <path class="move-limb" d="${legPose}"/>
+    </g>
+    <text x="100" y="222" text-anchor="middle" fill="rgba(242,246,255,.65)" font-size="12" font-weight="800" letter-spacing="1.5">${label.toUpperCase()}</text>
+  </svg>`;
+}
+
+function renderSources(){
+  return `<div class="source-box"><b>Evidence baseline:</b> strength work should cover major muscle groups at least two days per week. Mobility work here is intentionally conservative: warm up first, move slowly, do not bounce, and stop before pain. Sources: ${SOURCE_BASE.map(s => `<a target="_blank" rel="noopener noreferrer" href="${s.url}">${escapeHtml(s.label)}</a>`).join(' · ')}.</div>`;
+}
+
+function updateAll(){
+  const list = currentList();
+  const routine = generateRoutine(list);
+  lastRoutine = routine;
+  const pct = coveragePercent(routine);
+  q('#results').innerHTML = `
+    <div class="section-title"><h3>${modeTitle()}</h3><small>${activeModeHint()}</small></div>
+    ${renderSelectedChips()}
+    ${renderRoutine(routine)}
+    ${renderExercises(list)}
+    ${renderSources()}
+    <p class="mobile-note">Tip: rotate to landscape on small phones for the full four-view atlas.</p>
+  `;
+  q('#statExercises').textContent = list.length;
+  q('#statMuscles').textContent = selected.size;
+  q('#statCoverage').textContent = `${pct}%`;
+  q('#selectedCount').textContent = `${selected.size} selected`;
+  q('#toggleSelectMode').textContent = `Multi-select: ${multiSelect ? 'on' : 'off'}`;
+  qa('[data-remove]').forEach(btn => btn.addEventListener('click', e => { selected.delete(e.currentTarget.dataset.remove); previewExercise = null; openedExercise = null; updateAll(); }));
+  qa('.exercise').forEach(card => {
+    const id = card.dataset.exercise;
+    const ex = EXERCISES.find(e => e.id === id);
+    const head = q('.ex-head', card);
+    head.addEventListener('click', () => { openedExercise = openedExercise === id ? null : id; previewExercise = openedExercise ? ex : null; updateAll(); });
+    head.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openedExercise = openedExercise === id ? null : id; previewExercise = openedExercise ? ex : null; updateAll(); }});
+    card.addEventListener('mouseenter', () => { previewExercise = ex; updateBodyClasses(); });
+    card.addEventListener('mouseleave', () => { previewExercise = openedExercise ? EXERCISES.find(e => e.id === openedExercise) : null; updateBodyClasses(); });
+  });
+  updateBodyClasses();
+}
+function modeTitle(){
+  return ({ finder:'Exercise finder', maxCoverage:'Compound coverage optimizer', isolate:'Single-muscle isolation', mobility:'Healthy mobility generator', balanced:'Balanced day generator' })[activeMode] || 'Exercise finder';
+}
+function activeModeHint(){
+  return ({ finder:'sorted by selected-muscle match', maxCoverage:'greedy coverage routine', isolate:'one primary target per exercise', mobility:'joint-friendly sequence', balanced:'push / pull / legs / core / mobility' })[activeMode] || '';
+}
+
+function copyRoutineText(){
+  const lines = [];
+  lines.push('Muscle Atlas Trainer routine');
+  lines.push(`Mode: ${modeTitle()}`);
+  lines.push(`Selected muscles: ${selected.size ? [...selected].map(id => muscleById[id].name).join(', ') : 'all major muscle groups'}`);
+  lines.push('');
+  lastRoutine.forEach((ex, i) => lines.push(`${i+1}. ${ex.name} — ${setText(ex)} — primary: ${ex.primary.map(id => muscleById[id].name).join(', ')}`));
+  lines.push('');
+  lines.push('Caution: Use pain-free range, warm up, and scale load to technique. This app is educational, not medical advice.');
+  navigator.clipboard?.writeText(lines.join('\n')).then(() => flashCopy('Copied')).catch(() => flashCopy('Copy failed'));
+}
+function flashCopy(msg){ const b = q('#copyRoutine'); const old = b.textContent; b.textContent = msg; setTimeout(()=> b.textContent = old, 1100); }
+function escapeHtml(str){ return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+
+q('#toggleSelectMode').addEventListener('click', () => { multiSelect = !multiSelect; updateAll(); });
+q('#clearSelection').addEventListener('click', () => { selected.clear(); openedExercise = null; previewExercise = null; updateAll(); });
+q('#selectAllMajor').addEventListener('click', () => { selected = new Set(MUSCLES.map(m => m.id)); openedExercise = null; previewExercise = null; updateAll(); });
+q('#copyRoutine').addEventListener('click', copyRoutineText);
+qa('.mode-btn').forEach(btn => btn.addEventListener('click', e => { activeMode = e.currentTarget.dataset.mode; qa('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === activeMode)); openedExercise = null; previewExercise = null; updateAll(); }));
+['#typeFilter','#equipmentFilter','#difficultyFilter','#muscleSearch'].forEach(sel => q(sel).addEventListener('input', () => { openedExercise = null; previewExercise = null; updateAll(); }));
+
+renderBody();
+updateAll();
+</script>
+</body>
+</html>
