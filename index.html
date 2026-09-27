@@ -358,7 +358,7 @@
         </div>
         <div>
           <h1>Muscle Atlas Trainer</h1>
-          <div class="subtitle">Interactive anatomy-driven exercise finder for GitHub Pages. Select muscles, compare coverage, generate balanced routines.</div>
+          <div class="subtitle">Select muscles, compare exercises, and build a routine.</div>
         </div>
       </div>
       <div class="top-actions" role="toolbar" aria-label="Training mode">
@@ -883,7 +883,7 @@ function activeModeHint(){
   return ({ finder:'sorted by selected-muscle match', maxCoverage:'greedy coverage routine', isolate:'one primary target per exercise', mobility:'joint-friendly sequence', balanced:'push / pull / legs / core / mobility' })[activeMode] || '';
 }
 
-function copyRoutineText(){
+async function copyRoutineText(){
   const lines = [];
   lines.push('Muscle Atlas Trainer routine');
   lines.push(`Mode: ${modeTitle()}`);
@@ -892,7 +892,27 @@ function copyRoutineText(){
   lastRoutine.forEach((ex, i) => lines.push(`${i+1}. ${ex.name} — ${setText(ex)} — primary: ${ex.primary.map(id => muscleById[id].name).join(', ')}`));
   lines.push('');
   lines.push('Caution: Use pain-free range, warm up, and scale load to technique. This app is educational, not medical advice.');
-  navigator.clipboard?.writeText(lines.join('\n')).then(() => flashCopy('Copied')).catch(() => flashCopy('Copy failed'));
+  const text = lines.join('\n');
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(text);
+    flashCopy('Copied');
+  } catch {
+    let output = q('#routineCopyText');
+    if (!output) {
+      output = document.createElement('textarea');
+      output.id = 'routineCopyText';
+      output.setAttribute('aria-label', 'Routine text: select and copy');
+      output.readOnly = true;
+      output.rows = 8;
+      output.style.width = '100%';
+      q('#results').prepend(output);
+    }
+    output.value = text;
+    output.focus();
+    output.select();
+    flashCopy('Select and copy below');
+  }
 }
 function flashCopy(msg){ const b = q('#copyRoutine'); const old = b.textContent; b.textContent = msg; setTimeout(()=> b.textContent = old, 1100); }
 function escapeHtml(str){ return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
