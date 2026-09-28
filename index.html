@@ -46,7 +46,7 @@
 
     .app {
       height: 100vh;
-      width: 100vw;
+      width: 100%;
       display: grid;
       grid-template-rows: auto 1fr;
       gap: 14px;
@@ -68,6 +68,7 @@
     }
 
     .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .brand-copy { min-width: 0; flex: 1; }
     .mark {
       width: 44px; height: 44px; border-radius: 16px;
       display: grid; place-items: center;
@@ -131,6 +132,7 @@
     .search { width: min(290px, 44vw); outline: none; border-radius: 14px; }
     .search:focus { border-color: rgba(116,242,206,.55); box-shadow: 0 0 0 4px rgba(116,242,206,.08); }
 
+    .view-switcher { display: none; }
     .body-stage {
       position: relative;
       min-height: 0;
@@ -338,8 +340,12 @@
     }
     @media (max-width: 650px) {
       .app { padding: 8px; gap: 8px; }
+      .subtitle { white-space: normal; }
       .body-grid { grid-template-columns: 1fr; }
-      .view-card { min-height: 460px; }
+      .view-card { display: none; min-height: 460px; }
+      .view-card.active-view { display: grid; }
+      .view-switcher { display: flex; align-items: center; gap: 10px; width: 100%; }
+      .view-switcher select { flex: 1; }
       .filterbar, .stats-row { grid-template-columns: 1fr; }
       .detail-grid { grid-template-columns: 1fr; }
       .toolbar { align-items: stretch; flex-direction: column; }
@@ -356,7 +362,7 @@
         <div class="mark" aria-hidden="true">
           <svg viewBox="0 0 64 64"><path d="M32 6c8 0 12 5 12 12 0 4-2 7-5 9 9 3 15 12 15 24H10c0-12 6-21 15-24-3-2-5-5-5-9 0-7 4-12 12-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/></svg>
         </div>
-        <div>
+        <div class="brand-copy">
           <h1>Muscle Atlas Trainer</h1>
           <div class="subtitle">Select muscles, compare exercises, and build a routine.</div>
         </div>
@@ -378,6 +384,9 @@
             <button class="ghost" id="toggleSelectMode">Multi-select: on</button>
             <button class="ghost" id="clearSelection">Clear</button>
             <button class="solid" id="selectAllMajor">Select all major</button>
+            <label class="view-switcher">View
+              <select id="atlasView"><option value="front">Front</option><option value="back">Back</option><option value="left">Left side</option><option value="right">Right side</option></select>
+            </label>
           </div>
           <div class="toolbar-right">
             <button class="ghost" id="copyRoutine">Copy routine</button>
@@ -567,7 +576,7 @@ function renderBody(){
     ['front','Front'], ['back','Back'], ['left','Left side'], ['right','Right side']
   ];
   bodyGrid.innerHTML = views.map(([key,label]) => `
-    <div class="view-card">
+    <div class="view-card ${key === 'front' ? 'active-view' : ''}" data-view="${key}">
       <h2>${label}</h2>
       <svg viewBox="0 0 200 490" aria-label="${label} body view">
         <path class="skeleton" d="M77 64 Q100 82 123 64 L137 113 Q154 125 158 183 L157 254 Q151 264 139 255 L134 187 Q129 231 126 277 L137 462 L108 462 L100 348 L92 462 L63 462 L74 277 Q71 231 66 187 L61 255 Q49 264 43 254 L42 183 Q46 125 63 113 Z"/>
@@ -583,9 +592,14 @@ function renderBody(){
   });
 }
 
+function setAtlasView(view){
+  qa('.view-card').forEach(card => card.classList.toggle('active-view', card.dataset.view === view));
+}
+
 function toggleMuscle(id){
+  const wasSelected = selected.has(id);
   if(!multiSelect) selected.clear();
-  if(selected.has(id)) selected.delete(id); else selected.add(id);
+  if(wasSelected) selected.delete(id); else selected.add(id);
   previewExercise = null;
   openedExercise = null;
   updateAll();
@@ -603,6 +617,7 @@ function updateBodyClasses(){
   qa('.muscle-region').forEach(el => {
     const id = el.dataset.muscle;
     el.classList.toggle('selected', selected.has(id) && !previewExercise);
+    el.setAttribute('aria-pressed', String(selected.has(id)));
     el.classList.toggle('primary-hit', primary.has(id));
     el.classList.toggle('secondary-hit', !primary.has(id) && secondary.has(id));
     el.classList.toggle('dimmed', Boolean(previewExercise) && !primary.has(id) && !secondary.has(id));
@@ -780,7 +795,7 @@ function renderExercise(ex){
   const secondary = ex.secondary.map(id => muscleById[id]?.name || id);
   const all = [...primary, ...secondary].slice(0, 8).join(', ');
   return `<article class="exercise ${open ? 'open' : ''}" data-exercise="${ex.id}">
-    <div class="ex-head" role="button" tabindex="0" aria-label="Open ${escapeHtml(ex.name)}">
+    <div class="ex-head" role="button" tabindex="0" aria-label="${open ? 'Close' : 'Open'} ${escapeHtml(ex.name)}" aria-expanded="${open}" aria-controls="exercise-${ex.id}">
       <div>
         <div class="ex-title">${escapeHtml(ex.name)}</div>
         <div class="ex-sub">${escapeHtml(ex.summary)}<br><b>Targets:</b> ${escapeHtml(all)}</div>
@@ -790,7 +805,7 @@ function renderExercise(ex){
     <div class="ex-tags">
       <span class="chip">${escapeHtml(ex.type)}</span><span class="chip">${escapeHtml(ex.equipment)}</span><span class="chip">${escapeHtml(ex.difficulty)}</span><span class="chip">${escapeHtml(setText(ex))}</span>
     </div>
-    <div class="ex-body">
+    <div class="ex-body" id="exercise-${ex.id}">
       <div class="detail-grid">
         <div class="demo">${demoSvg(ex)}</div>
         <div>
@@ -846,6 +861,13 @@ function renderSources(){
   return `<div class="source-box"><b>Evidence baseline:</b> strength work should cover major muscle groups at least two days per week. Mobility work here is intentionally conservative: warm up first, move slowly, do not bounce, and stop before pain. Sources: ${SOURCE_BASE.map(s => `<a target="_blank" rel="noopener noreferrer" href="${s.url}">${escapeHtml(s.label)}</a>`).join(' · ')}.</div>`;
 }
 
+function toggleExercise(id){
+  openedExercise = openedExercise === id ? null : id;
+  previewExercise = openedExercise ? EXERCISES.find(ex => ex.id === id) : null;
+  updateAll();
+  q(`.exercise[data-exercise="${id}"] .ex-head`)?.focus({preventScroll:true});
+}
+
 function updateAll(){
   const list = currentList();
   const routine = generateRoutine(list);
@@ -857,7 +879,6 @@ function updateAll(){
     ${renderRoutine(routine)}
     ${renderExercises(list)}
     ${renderSources()}
-    <p class="mobile-note">Tip: rotate to landscape on small phones for the full four-view atlas.</p>
   `;
   q('#statExercises').textContent = list.length;
   q('#statMuscles').textContent = selected.size;
@@ -869,8 +890,8 @@ function updateAll(){
     const id = card.dataset.exercise;
     const ex = EXERCISES.find(e => e.id === id);
     const head = q('.ex-head', card);
-    head.addEventListener('click', () => { openedExercise = openedExercise === id ? null : id; previewExercise = openedExercise ? ex : null; updateAll(); });
-    head.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openedExercise = openedExercise === id ? null : id; previewExercise = openedExercise ? ex : null; updateAll(); }});
+    head.addEventListener('click', () => toggleExercise(id));
+    head.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExercise(id); }});
     card.addEventListener('mouseenter', () => { previewExercise = ex; updateBodyClasses(); });
     card.addEventListener('mouseleave', () => { previewExercise = openedExercise ? EXERCISES.find(e => e.id === openedExercise) : null; updateBodyClasses(); });
   });
@@ -917,6 +938,7 @@ async function copyRoutineText(){
 function flashCopy(msg){ const b = q('#copyRoutine'); const old = b.textContent; b.textContent = msg; setTimeout(()=> b.textContent = old, 1100); }
 function escapeHtml(str){ return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 
+q('#atlasView').addEventListener('change', e => setAtlasView(e.target.value));
 q('#toggleSelectMode').addEventListener('click', () => { multiSelect = !multiSelect; updateAll(); });
 q('#clearSelection').addEventListener('click', () => { selected.clear(); openedExercise = null; previewExercise = null; updateAll(); });
 q('#selectAllMajor').addEventListener('click', () => { selected = new Set(MUSCLES.map(m => m.id)); openedExercise = null; previewExercise = null; updateAll(); });

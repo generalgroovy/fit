@@ -4,10 +4,10 @@
 
 ## Build a reference routine
 
-1. Select a muscle in the front, back or side views. Repeated regions share the same selection. Toggle **Multi-select** to choose one or several groups; **Clear** resets them and **Select all major** selects the full atlas.
+1. Select a muscle in the front, back or side views. On phones, use **View** to switch the visible atlas without scrolling through all four views. Repeated regions share the same selection. Select an active muscle again to deselect it, including in single-select mode. Toggle **Multi-select** to choose one or several groups; **Clear** resets them and **Select all major** selects the full atlas.
 2. Choose a mode: **Finder**, **Target most muscles**, **Isolate single**, **Healthy mobility** or **Balanced day**.
 3. Narrow the list with the search, exercise type, equipment and difficulty filters.
-4. Open an exercise card for its instructions. The displayed coverage percentage comes from the app's primary/secondary muscle tags, not a measured training outcome.
+4. Open an exercise card for its instructions; Enter or Space toggles a focused card and keeps focus on that card. The displayed coverage percentage comes from the app's primary/secondary muscle tags, not a measured training outcome.
 5. Choose **Copy routine**. If browser clipboard access is unavailable or denied, a text box appears with the routine selected for manual copying.
 
 With no muscles selected, the app uses general full-body options. Mode names describe the filtering/generation workflow; they are not individualized clinical or training assessments. The built-in exercise descriptions and suggested sets/repetitions should be reviewed for the intended user's circumstances.
@@ -23,7 +23,7 @@ The entire app is in `index.html`; there is no build step or third-party runtime
 With Node.js 18 or newer:
 
 ```sh
-node --test tests/copy.test.cjs
+node --test tests/*.cjs
 ```
 
-Tests cover successful clipboard writes and the selectable-text fallback when the clipboard is absent or rejects access. Browser QA should select a muscle, change mode/filters, open a card, and copy the resulting routine. Exercise safety, medical claims, movement coaching and individual training suitability are outside these software tests.
+Tests cover selection toggling, exercise focus, successful clipboard writes and the selectable-text fallback when the clipboard is absent or rejects access. Browser QA should select a muscle, change mode/filters, open a card, and copy the resulting routine. Exercise safety, medical claims, movement coaching and individual training suitability are outside these software tests.
