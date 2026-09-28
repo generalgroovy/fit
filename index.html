@@ -353,6 +353,7 @@
       .search { width: 100%; }
       .mobile-note { display: block; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
     }
+  .atlas-info { margin:10px 16px; font-size:13px; line-height:1.5; color:var(--muted); } summary { cursor:pointer; padding:8px 0; } .atlas-info a { color:var(--accent); } .muscle-list { display:flex; flex-wrap:wrap; gap:6px; padding:8px 0; } .muscle-list button { min-height:36px; } .muscle-focus { padding:8px 16px; min-height:38px; font-size:13px; color:var(--accent); } .atlas-legend { display:flex; gap:8px; flex-wrap:wrap; align-items:center; } .atlas-legend i { background:var(--accent); width:12px; height:12px; border-radius:3px; } .atlas-legend .secondary { background:#7aa8ff; border:1px dashed white; } .anatomy-lines { pointer-events:none; stroke:rgba(220,239,244,.5); stroke-width:1.5; fill:none; } .target-region { fill:#3c485c; stroke:#b0c1d1; stroke-width:1.1; } .target-region.primary-hit { fill:var(--accent); stroke:#edfff9; } .target-region.secondary-hit { fill:#7aa8ff; stroke:white; stroke-dasharray:3 2; } .target-region.dimmed { opacity:.2; } .target-map { margin:0; } .target-map>div { display:flex; justify-content:center; } .demo .target-map svg { width:50%; height:260px; } .target-map figcaption { font-size:11px; color:var(--muted); text-align:center; line-height:1.5; margin:8px 0; } .target-label { flex-basis:100%; font-size:12px; font-weight:700; } #printOutput { display:none; } .routine-box details { color:var(--muted); font-size:12px; } .source-box summary { color:var(--accent); } @media print { body { background:white!important; color:black!important; overflow:visible!important; } .app { display:none!important; } #printOutput { display:block; color:black; max-width:800px; padding:20px; } #printOutput>ol>li { break-inside:avoid; margin-bottom:20px; } #printOutput h2 { font-size:16px; } #printOutput p,#printOutput li { font-size:12px; } }
   </style>
 </head>
 <body>
@@ -364,14 +365,14 @@
         </div>
         <div class="brand-copy">
           <h1>Muscle Atlas Trainer</h1>
-          <div class="subtitle">Select muscles, compare exercises, and build a routine.</div>
+
         </div>
       </div>
       <div class="top-actions" role="toolbar" aria-label="Training mode">
         <button class="pill mode-btn active" data-mode="finder">Finder</button>
         <button class="pill mode-btn" data-mode="maxCoverage">Target most muscles</button>
         <button class="pill mode-btn" data-mode="isolate">Isolate single</button>
-        <button class="pill mode-btn" data-mode="mobility">Healthy mobility</button>
+        <button class="pill mode-btn" data-mode="mobility">Mobility</button>
         <button class="pill mode-btn" data-mode="balanced">Balanced day</button>
       </div>
     </header>
@@ -389,16 +390,19 @@
             </label>
           </div>
           <div class="toolbar-right">
-            <button class="ghost" id="copyRoutine">Copy routine</button>
+            <button class="ghost" id="copyRoutine">Copy routine</button><button class="ghost" id="printRoutine">Print routine</button>
           </div>
         </div>
+        <details class="atlas-info"><summary>Muscle list</summary><div id="muscleList" class="muscle-list"></div></details>
+        <div id="muscleFocus" class="muscle-focus" role="status">Select a region</div>
         <div class="body-stage">
           <div class="body-grid" id="bodyGrid"></div>
         </div>
         <div class="atlas-foot">
-          <span>Click a region in front, back, left side, or right side view. Repeated regions share the same muscle selection.</span>
+          <span class="atlas-legend"><i></i> Selected / primary <i class="secondary"></i> Secondary</span>
           <span id="selectedCount">0 selected</span>
         </div>
+        <details class="atlas-info"><summary>Info &amp; sources</summary><p>Select a body region or use the muscle list. Open an exercise to compare its primary and secondary targets. Repeated regions share the selection.</p><p>These original schematic maps show approximate group locations, not tissue depth, individual anatomy, or measured activation. The rotator cuff and hip flexors include deep muscles; the atlas uses surface projections to make them selectable. Exercise diagrams show targets, not movement technique.</p><p>Reference: <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-5-muscles-of-the-pectoral-girdle-and-upper-limbs" target="_blank" rel="noopener">OpenStax upper limbs</a> · <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs" target="_blank" rel="noopener">Lower limbs</a>. Diagrams are original SVG drawings. Coverage counts the catalogue's target tags; it does not measure training effectiveness.</p></details>
       </section>
 
       <aside class="right panel" aria-label="Exercise results and instructions">
@@ -435,6 +439,7 @@
     </main>
   </div>
 
+<section id="printOutput" aria-label="Printable routine"></section>
 <script>
 const MUSCLES = [
   { id:'neck', name:'Neck / cervical stabilizers', region:'upper', view:'side' },
@@ -514,45 +519,67 @@ const SOURCE_BASE = [
   { label:'Mayo Clinic stretching safety', url:'https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/stretching/art-20546848' }
 ];
 
+// Original group-location schematics, not a tissue dissection or activation heat map.
 const BODY_REGIONS = {
   front: [
-    ['ellipse',{cx:100,cy:38,rx:20,ry:24},'neck'], ['path',{d:'M80 64 Q100 78 120 64 L128 105 Q114 118 100 118 Q86 118 72 105 Z'},'pecs'],
-    ['path',{d:'M72 73 Q52 84 44 110 L62 121 Q72 104 80 82 Z'},'front_delts'], ['path',{d:'M128 73 Q148 84 156 110 L138 121 Q128 104 120 82 Z'},'front_delts'],
-    ['path',{d:'M62 121 Q51 145 49 181 L66 184 Q73 149 78 124 Z'},'biceps'], ['path',{d:'M138 121 Q149 145 151 181 L134 184 Q127 149 122 124 Z'},'biceps'],
-    ['path',{d:'M48 181 Q43 217 44 252 L62 252 Q65 218 66 184 Z'},'forearms'], ['path',{d:'M152 181 Q157 217 156 252 L138 252 Q135 218 134 184 Z'},'forearms'],
-    ['path',{d:'M86 118 L114 118 L119 179 L81 179 Z'},'abs'], ['path',{d:'M72 112 L86 118 L81 179 L70 169 Q66 139 72 112 Z'},'serratus'], ['path',{d:'M128 112 L114 118 L119 179 L130 169 Q134 139 128 112 Z'},'serratus'],
-    ['path',{d:'M70 169 L81 179 L82 216 L67 221 Q63 190 70 169 Z'},'obliques'], ['path',{d:'M130 169 L119 179 L118 216 L133 221 Q137 190 130 169 Z'},'obliques'],
-    ['path',{d:'M82 216 L100 218 L96 340 L70 340 Q65 275 82 216 Z'},'quads'], ['path',{d:'M100 218 L118 216 Q135 275 130 340 L104 340 Z'},'quads'],
-    ['path',{d:'M72 230 Q53 270 55 323 L70 340 Q70 276 82 216 Z'},'adductors'], ['path',{d:'M128 230 Q147 270 145 323 L130 340 Q130 276 118 216 Z'},'adductors'],
-    ['path',{d:'M82 217 L118 217 L116 240 Q100 250 84 240 Z'},'hip_flexors'],
-    ['path',{d:'M70 340 L96 340 L92 424 L67 424 Q63 380 70 340 Z'},'tibialis'], ['path',{d:'M104 340 L130 340 Q137 380 133 424 L108 424 Z'},'tibialis'],
-    ['path',{d:'M67 424 L92 424 L88 462 L62 462 Q63 441 67 424 Z'},'calves'], ['path',{d:'M108 424 L133 424 Q137 441 138 462 L112 462 Z'},'calves']
+    ['path',{d:'M87 58 L95 64 L96 83 L84 76 Z M113 58 L105 64 L104 83 L116 76 Z'},'neck'],
+    ['path',{d:'M81 78 Q65 80 64 109 L76 114 L90 82 Z M119 78 Q135 80 136 109 L124 114 L110 82 Z'},'front_delts'],
+    ['path',{d:'M65 81 Q49 84 46 111 L59 121 L67 101 Z M135 81 Q151 84 154 111 L141 121 L133 101 Z'},'lateral_delts'],
+    ['path',{d:'M83 83 Q92 80 98 86 L98 118 Q82 123 70 110 Z M117 83 Q108 80 102 86 L102 118 Q118 123 130 110 Z'},'pecs'],
+    ['path',{d:'M56 120 Q46 142 49 178 L61 182 Q69 146 67 126 Z M144 120 Q154 142 151 178 L139 182 Q131 146 133 126 Z'},'biceps'],
+    ['path',{d:'M49 185 Q42 208 44 246 L55 252 L63 187 Z M151 185 Q158 208 156 246 L145 252 L137 187 Z'},'forearms'],
+    ['path',{d:'M88 123 L98 124 L98 214 L87 211 Q81 170 88 123 Z M112 123 L102 124 L102 214 L113 211 Q119 170 112 123 Z'},'abs'],
+    ['path',{d:'M72 114 L84 121 L81 160 L71 148 Z M128 114 L116 121 L119 160 L129 148 Z'},'serratus'],
+    ['path',{d:'M71 152 L81 164 L84 215 L70 225 Q64 195 71 152 Z M129 152 L119 164 L116 215 L130 225 Q136 195 129 152 Z'},'obliques'],
+    ['path',{d:'M68 220 L75 224 L72 249 L64 255 Z M132 220 L125 224 L128 249 L136 255 Z'},'abductors'],
+    ['path',{d:'M73 224 L89 218 L94 246 L80 253 Z M127 224 L111 218 L106 246 L120 253 Z'},'hip_flexors'],
+    ['path',{d:'M71 239 Q60 273 67 332 L85 342 L90 290 L86 253 Z M129 239 Q140 273 133 332 L115 342 L110 290 L114 253 Z'},'quads'],
+    ['path',{d:'M90 247 L98 250 L96 327 L89 339 L86 285 Z M110 247 L102 250 L104 327 L111 339 L114 285 Z'},'adductors'],
+    ['path',{d:'M72 354 L82 353 L87 439 L76 445 Z M128 354 L118 353 L113 439 L124 445 Z'},'tibialis'],
+    ['path',{d:'M67 351 L72 354 L74 408 L64 424 Q59 386 67 351 Z M133 351 L128 354 L126 408 L136 424 Q141 386 133 351 Z'},'calves']
   ],
   back: [
-    ['ellipse',{cx:100,cy:38,rx:20,ry:24},'neck'], ['path',{d:'M79 62 Q100 82 121 62 L130 95 Q100 118 70 95 Z'},'upper_traps'],
-    ['path',{d:'M72 92 Q100 120 128 92 L122 166 Q100 190 78 166 Z'},'mid_traps'],
-    ['path',{d:'M70 92 Q50 82 42 112 L61 126 Q71 111 80 95 Z'},'rear_delts'], ['path',{d:'M130 92 Q150 82 158 112 L139 126 Q129 111 120 95 Z'},'rear_delts'],
-    ['path',{d:'M78 111 Q58 136 56 183 L75 188 Q87 154 92 122 Z'},'lats'], ['path',{d:'M122 111 Q142 136 144 183 L125 188 Q113 154 108 122 Z'},'lats'],
-    ['path',{d:'M56 126 Q49 154 49 186 L66 186 Q70 151 75 127 Z'},'triceps'], ['path',{d:'M144 126 Q151 154 151 186 L134 186 Q130 151 125 127 Z'},'triceps'],
-    ['path',{d:'M48 185 Q43 218 44 252 L62 252 Q65 219 66 186 Z'},'forearms'], ['path',{d:'M152 185 Q157 218 156 252 L138 252 Q135 219 134 186 Z'},'forearms'],
-    ['path',{d:'M80 166 Q100 190 120 166 L124 224 Q100 238 76 224 Z'},'erectors'],
-    ['path',{d:'M76 224 Q100 242 124 224 L132 270 Q100 296 68 270 Z'},'glutes'],
-    ['path',{d:'M70 270 L97 282 L94 386 L67 386 Q63 327 70 270 Z'},'hamstrings'], ['path',{d:'M130 270 L103 282 L106 386 L133 386 Q137 327 130 270 Z'},'hamstrings'],
-    ['path',{d:'M68 385 L94 385 L91 462 L63 462 Q62 420 68 385 Z'},'calves'], ['path',{d:'M106 385 L132 385 Q138 420 137 462 L109 462 Z'},'calves']
+    ['path',{d:'M89 59 L99 64 L98 82 L82 76 Z M111 59 L101 64 L102 82 L118 76 Z'},'neck'],
+    ['path',{d:'M84 72 L98 83 L98 111 L67 87 Z M116 72 L102 83 L102 111 L133 87 Z'},'upper_traps'],
+    ['path',{d:'M74 99 L98 115 L98 168 L86 149 Z M126 99 L102 115 L102 168 L114 149 Z'},'mid_traps'],
+    ['path',{d:'M64 84 Q47 84 43 111 L59 125 L77 102 Z M136 84 Q153 84 157 111 L141 125 L123 102 Z'},'rear_delts'],
+    ['path',{d:'M67 107 L79 116 L82 132 L65 129 Z M133 107 L121 116 L118 132 L135 129 Z'},'rotator_cuff'],
+    ['path',{d:'M70 133 L86 142 L93 210 L73 202 Q65 170 70 133 Z M130 133 L114 142 L107 210 L127 202 Q135 170 130 133 Z'},'lats'],
+    ['path',{d:'M53 128 L65 132 Q70 155 61 184 L48 181 Z M147 128 L135 132 Q130 155 139 184 L152 181 Z'},'triceps'],
+    ['path',{d:'M48 187 L61 188 L56 251 L44 246 Z M152 187 L139 188 L144 251 L156 246 Z'},'forearms'],
+    ['path',{d:'M92 165 L98 175 L98 231 L88 223 Z M108 165 L102 175 L102 231 L112 223 Z'},'erectors'],
+    ['path',{d:'M75 218 Q86 231 98 233 L98 276 Q78 288 67 269 Z M125 218 Q114 231 102 233 L102 276 Q122 288 133 269 Z'},'glutes'],
+    ['path',{d:'M70 279 L96 286 L90 340 L69 345 Q64 315 70 279 Z M130 279 L104 286 L110 340 L131 345 Q136 315 130 279 Z'},'hamstrings'],
+    ['path',{d:'M70 354 L90 351 Q99 383 88 417 L78 445 L65 423 Q59 384 70 354 Z M130 354 L110 351 Q101 383 112 417 L122 445 L135 423 Q141 384 130 354 Z'},'calves']
   ],
   left: [
-    ['ellipse',{cx:96,cy:38,rx:18,ry:24},'neck'], ['path',{d:'M87 66 Q101 71 109 82 L103 174 L82 174 L78 93 Z'},'pecs'],
-    ['path',{d:'M76 78 Q56 93 53 127 L69 132 Q76 107 88 78 Z'},'lateral_delts'], ['path',{d:'M69 132 Q57 154 58 187 L74 187 Q78 154 80 132 Z'},'biceps'],
-    ['path',{d:'M74 187 Q70 219 72 254 L89 254 Q90 219 88 187 Z'},'forearms'],
-    ['path',{d:'M104 86 Q123 120 119 171 L104 174 Z'},'lats'], ['path',{d:'M82 174 L104 174 L106 224 L83 222 Z'},'abs'],
-    ['path',{d:'M104 174 L121 190 L123 224 L106 224 Z'},'obliques'], ['path',{d:'M83 222 Q103 246 122 224 L126 276 Q104 291 80 276 Z'},'glutes'],
-    ['path',{d:'M80 224 L101 230 L97 336 L73 336 Q66 277 80 224 Z'},'quads'], ['path',{d:'M104 230 L126 276 Q132 329 119 386 L96 386 Z'},'hamstrings'],
-    ['path',{d:'M73 336 L97 336 L95 420 L70 420 Q66 378 73 336 Z'},'tibialis'], ['path',{d:'M96 386 L119 386 Q125 423 124 462 L98 462 Z'},'calves'],
-    ['path',{d:'M121 190 Q137 219 136 266 L122 266 Q123 222 121 190 Z'},'abductors'], ['path',{d:'M84 225 Q77 262 78 307 L94 307 Q94 264 101 230 Z'},'hip_flexors']
-  ],
-  right: []
+    ['path',{d:'M88 59 L105 61 L108 80 L87 78 Z'},'neck'],
+    ['path',{d:'M84 81 L95 86 L92 115 L76 108 Z'},'front_delts'],
+    ['path',{d:'M95 82 L111 86 L114 110 L94 115 Z'},'lateral_delts'],
+    ['path',{d:'M112 89 L121 103 L119 123 L112 112 Z'},'rear_delts'],
+    ['path',{d:'M77 113 L85 118 L86 165 L75 155 Z'},'pecs'],
+    ['path',{d:'M91 120 L99 120 L98 177 L87 181 Z'},'biceps'],
+    ['path',{d:'M101 119 L113 124 L114 176 L101 179 Z'},'triceps'],
+    ['path',{d:'M88 186 L112 185 L108 250 L94 251 Z'},'forearms'],
+    ['path',{d:'M115 128 L123 130 L122 185 L112 199 L112 181 Z'},'lats'],
+    ['path',{d:'M77 168 L86 174 L88 222 L77 225 Z'},'abs'],
+    ['path',{d:'M111 197 L122 190 L123 229 L107 230 Z'},'obliques'],
+    ['path',{d:'M104 233 L124 235 Q135 257 122 281 L104 277 Z'},'glutes'],
+    ['path',{d:'M93 231 L102 231 L103 268 L94 276 Z'},'abductors'],
+    ['path',{d:'M78 230 L90 232 L91 265 L79 273 Z'},'hip_flexors'],
+    ['path',{d:'M78 275 L99 277 L95 342 L74 341 Z'},'quads'],
+    ['path',{d:'M104 283 L121 284 L116 341 L100 344 Z'},'hamstrings'],
+    ['path',{d:'M76 350 L88 350 L90 438 L77 440 Z'},'tibialis'],
+    ['path',{d:'M94 350 L115 352 Q125 386 110 426 L95 444 Z'},'calves']
+  ]
 };
 BODY_REGIONS.right = BODY_REGIONS.left;
+const BODY_OUTLINE = 'M86 59 Q100 70 114 59 L121 75 Q149 74 159 112 L161 183 L160 253 Q153 267 140 253 L132 184 L133 218 L138 273 L139 340 L140 440 L145 466 L116 467 L103 351 L100 289 L97 351 L84 467 L55 466 L60 440 L61 340 L62 273 L67 218 L68 184 L60 253 Q47 267 40 253 L39 183 L41 112 Q51 74 79 75 Z';
+const LANDMARKS = {
+  front:'M100 82 V219 M87 145 H113 M86 169 H114 M86 191 H114 M71 245 Q77 290 74 331 M129 245 Q123 290 126 331 M68 347 Q80 339 93 347 M107 347 Q120 339 132 347 M48 204 L57 194 M152 204 L143 194',
+  back:'M100 79 V273 M76 109 L84 134 L91 117 M124 109 L116 134 L109 117 M73 240 Q87 247 96 271 M127 240 Q113 247 104 271 M80 290 L78 333 M120 290 L122 333 M79 359 L79 423 M121 359 L121 423',
+  left:'M80 169 Q98 175 123 169 M80 341 H119 M99 87 L104 108 M99 238 L99 270 M94 351 L99 423'
+};
 
 let selected = new Set();
 let activeMode = 'finder';
@@ -562,11 +589,18 @@ let lastRoutine = [];
 let previewExercise = null;
 
 const muscleById = Object.fromEntries(MUSCLES.map(m => [m.id, m]));
+const MUSCLE_DETAILS = {
+  neck:'Neck · supports and moves the head', upper_traps:'Upper back · elevates the shoulder girdle', mid_traps:'Mid back · retracts and stabilizes the shoulder blades', rotator_cuff:'Shoulder · stabilizes and rotates the upper arm; deep group',
+  front_delts:'Front shoulder · raises the arm forward', lateral_delts:'Outer shoulder · raises the arm sideways', rear_delts:'Back shoulder · moves the arm backward', pecs:'Chest · brings the upper arm across the body', serratus:'Side ribs · moves and stabilizes the shoulder blade', lats:'Back · draws the upper arm toward the torso', biceps:'Front upper arm · bends the elbow', triceps:'Back upper arm · straightens the elbow', forearms:'Forearm · wrist, finger, and grip movements',
+  abs:'Front trunk · trunk control and flexion', obliques:'Side trunk · rotation and side bending', erectors:'Along the spine · trunk extension and control', hip_flexors:'Front hip · bends the hip; includes deep muscles', glutes:'Buttocks · hip extension and control', abductors:'Outer hip · moves the thigh sideways', adductors:'Inner thigh · draws the thigh inward', quads:'Front thigh · straightens the knee', hamstrings:'Back thigh · bends the knee and helps extend the hip', calves:'Back lower leg · points the foot downward', tibialis:'Front shin · raises the front of the foot'
+};
 const q = (sel, root=document) => root.querySelector(sel);
 const qa = (sel, root=document) => [...root.querySelectorAll(sel)];
 
 function attrsToString(attrs){ return Object.entries(attrs).map(([k,v]) => `${k}="${v}"`).join(' '); }
 function regionShape(tag, attrs, muscle){
+  // Separate left/right shapes so each button's hit box lies on the muscle.
+  if(tag === 'path' && attrs.d.includes(' M')) return attrs.d.split(/ (?=M)/).map(d => regionShape(tag,{...attrs,d},muscle)).join('');
   const label = muscleById[muscle]?.name || muscle;
   return `<${tag} ${attrsToString(attrs)} class="muscle-region" data-muscle="${muscle}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"><title>${escapeHtml(label)}</title></${tag}>`;
 }
@@ -578,16 +612,21 @@ function renderBody(){
   bodyGrid.innerHTML = views.map(([key,label]) => `
     <div class="view-card ${key === 'front' ? 'active-view' : ''}" data-view="${key}">
       <h2>${label}</h2>
-      <svg viewBox="0 0 200 490" aria-label="${label} body view">
-        <path class="skeleton" d="M77 64 Q100 82 123 64 L137 113 Q154 125 158 183 L157 254 Q151 264 139 255 L134 187 Q129 231 126 277 L137 462 L108 462 L100 348 L92 462 L63 462 L74 277 Q71 231 66 187 L61 255 Q49 264 43 254 L42 183 Q46 125 63 113 Z"/>
+      <svg viewBox="0 0 200 490" aria-label="${label} schematic muscle group map">
+        <path class="skeleton" d="${BODY_OUTLINE}"/>
         <circle class="joint" cx="100" cy="38" r="22"/>
         ${key === 'right' ? `<g transform="translate(200 0) scale(-1 1)">${BODY_REGIONS.left.map(r => regionShape(...r)).join('')}</g>` : BODY_REGIONS[key].map(r => regionShape(...r)).join('')}
+        <path class="anatomy-lines" d="${LANDMARKS[key === 'right' ? 'left' : key]}" ${key === 'right' ? 'transform="translate(200 0) scale(-1 1)"' : ''} />
       </svg>
     </div>`).join('');
+  q('#muscleList').innerHTML = MUSCLES.map(m => `<button class="chip" data-muscle-pick="${m.id}" aria-pressed="false">${escapeHtml(m.name)}</button>`).join('');
+  qa('[data-muscle-pick]').forEach(button => button.addEventListener('click', () => toggleMuscle(button.dataset.musclePick)));
   qa('.muscle-region').forEach(el => {
     el.addEventListener('click', () => toggleMuscle(el.dataset.muscle));
     el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMuscle(el.dataset.muscle); }});
     el.addEventListener('mouseenter', () => showMusclePreview(el.dataset.muscle));
+    el.addEventListener('focus', () => showMusclePreview(el.dataset.muscle));
+    el.addEventListener('blur', () => updateBodyClasses());
     el.addEventListener('mouseleave', () => updateBodyClasses());
   });
 }
@@ -606,6 +645,8 @@ function toggleMuscle(id){
 }
 
 function showMusclePreview(id){
+  q('#muscleFocus').textContent = `${muscleById[id]?.name || ''} — ${MUSCLE_DETAILS[id] || ''}`;
+
   qa('.muscle-region').forEach(el => {
     el.classList.toggle('secondary-hit', el.dataset.muscle === id && !selected.has(id));
   });
@@ -623,6 +664,9 @@ function updateBodyClasses(){
     el.classList.toggle('dimmed', Boolean(previewExercise) && !primary.has(id) && !secondary.has(id));
   });
   q('#selectedCount').textContent = `${selected.size} selected`;
+  qa('[data-muscle-pick]').forEach(button => { button.setAttribute('aria-pressed', String(selected.has(button.dataset.musclePick))); button.classList.toggle('primary',selected.has(button.dataset.musclePick)); });
+  const focused = [...selected][0];
+  q('#muscleFocus').textContent = previewExercise ? previewExercise.name + ' · targets' : selected.size === 1 ? `${muscleById[focused].name} — ${MUSCLE_DETAILS[focused]}` : selected.size ? `${selected.size} groups selected` : 'Select a region';
 }
 
 function filters(){
@@ -639,8 +683,7 @@ function exerciseMatchesFilters(ex, f){
   if(f.difficulty !== 'all' && ex.difficulty !== f.difficulty) return false;
   if(f.search){
     const hay = [ex.name, ex.summary, ex.type, ex.equipment, ex.difficulty, ...ex.primary.map(id => muscleById[id]?.name), ...ex.secondary.map(id => muscleById[id]?.name)].join(' ').toLowerCase();
-    const muscleHay = MUSCLES.map(m => `${m.id} ${m.name}`).join(' ').toLowerCase();
-    if(!hay.includes(f.search) && !muscleHay.includes(f.search)) return false;
+    if(!hay.includes(f.search)) return false;
   }
   return true;
 }
@@ -744,9 +787,10 @@ function currentList(){
 
 function generateRoutine(list){
   if(activeMode === 'mobility') return buildMobilityRoutine(list);
-  if(activeMode === 'balanced') return buildBalancedRoutine(EXERCISES.filter(ex => exerciseMatchesFilters(ex, {...filters(), type:'all'})));
+  if(activeMode === 'balanced') return buildBalancedRoutine(list);
   if(activeMode === 'isolate') return list.slice(0, Math.min(6, list.length));
-  return buildCoverageRoutine(EXERCISES.filter(ex => exerciseMatchesFilters(ex, {...filters(), type:'all'})));
+  if(filters().type === 'stretch' || filters().type === 'mobility') return buildMobilityRoutine(list);
+  return buildCoverageRoutine(list);
 }
 
 function coveragePercent(routine){
@@ -757,20 +801,20 @@ function coveragePercent(routine){
 }
 
 function renderSelectedChips(){
-  if(selected.size === 0) return '<div class="chips"><span class="chip warn">No muscle selected: showing general full-body options</span></div>';
+  if(selected.size === 0) return '<div class="chips"><span class="chip warn">Full body</span></div>';
   return `<div class="chips">${[...selected].map(id => `<button class="chip primary" data-remove="${id}" title="Remove ${escapeHtml(muscleById[id].name)}">${escapeHtml(muscleById[id].name)} ×</button>`).join('')}</div>`;
 }
 
 function renderRoutine(routine){
   if(!routine.length) return '';
   const pct = coveragePercent(routine);
-  const label = activeMode === 'mobility' ? 'Healthy mobility sequence' : activeMode === 'isolate' ? 'Isolation shortlist' : activeMode === 'balanced' ? 'Balanced training day' : 'Coverage-optimized routine';
+  const label = 'Routine';
   const dose = activeMode === 'mobility' ? 'Use 30–45 seconds or 5–8 slow reps per side. Keep everything pain-free.' : 'Use 2–4 controlled sets. Stop 1–3 reps before form failure unless you know your recovery and technique are solid.';
   return `<div class="routine-box">
     <h4>${label}</h4>
     <ol>${routine.map(ex => `<li><b>${escapeHtml(ex.name)}</b> <span style="color:var(--muted)">— ${escapeHtml(setText(ex))}</span></li>`).join('')}</ol>
     <div class="coverage" title="Target coverage"><div style="width:${pct}%"></div></div>
-    <p style="margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.45">${dose}</p>
+    <details><summary>Routine notes</summary><p>${dose}</p><p>Suggested quantities are generic reference values. Adjust to your circumstances.</p></details>
   </div>`;
 }
 
@@ -798,7 +842,7 @@ function renderExercise(ex){
     <div class="ex-head" role="button" tabindex="0" aria-label="${open ? 'Close' : 'Open'} ${escapeHtml(ex.name)}" aria-expanded="${open}" aria-controls="exercise-${ex.id}">
       <div>
         <div class="ex-title">${escapeHtml(ex.name)}</div>
-        <div class="ex-sub">${escapeHtml(ex.summary)}<br><b>Targets:</b> ${escapeHtml(all)}</div>
+        <div class="ex-sub">${escapeHtml(primary.join(', '))}</div>
       </div>
       <div class="score"><b>${score}</b><span>match</span></div>
     </div>
@@ -809,9 +853,9 @@ function renderExercise(ex){
       <div class="detail-grid">
         <div class="demo">${demoSvg(ex)}</div>
         <div>
-          <div class="chips">
+          <div class="chips"><span class="target-label">Primary</span>
             ${ex.primary.map(id => `<span class="chip primary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
-            ${ex.secondary.map(id => `<span class="chip secondary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
+            <span class="target-label">Secondary</span>${ex.secondary.map(id => `<span class="chip secondary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
           </div>
           <ol class="steps">${ex.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
           <p style="color:var(--muted);font-size:12px;line-height:1.45;margin:10px 0 0"><b>Caution:</b> ${escapeHtml(ex.cautions)}</p>
@@ -837,28 +881,21 @@ function researchLinks(ex){
   return links;
 }
 
+function targetMap(ex, view){
+  const primary = new Set(ex.primary), secondary = new Set(ex.secondary);
+  return `<svg viewBox="0 0 200 490" role="img" aria-label="${view === 'front' ? 'Front' : 'Back'} target map for ${escapeHtml(ex.name)}"><path class="skeleton" d="${BODY_OUTLINE}"/><circle class="joint" cx="100" cy="38" r="22"/>${BODY_REGIONS[view].map(([tag,attrs,id]) => `<${tag} ${attrsToString(attrs)} class="target-region ${primary.has(id) ? 'primary-hit' : secondary.has(id) ? 'secondary-hit' : 'dimmed'}"/>`).join('')}<path class="anatomy-lines" d="${LANDMARKS[view]}"/></svg>`;
+}
 function demoSvg(ex){
-  const p = ex.pattern;
-  const label = escapeHtml(ex.pattern.replace('_',' '));
-  const torsoY = p === 'squat' || p === 'lunge' ? 60 : 46;
-  const armPose = p.includes('pull') ? 'M78 66 L52 45 M122 66 L148 45' : p.includes('press') ? 'M78 66 L62 31 M122 66 L138 31' : p === 'carry' ? 'M78 66 L59 116 M122 66 L141 116' : 'M78 66 L64 98 M122 66 L136 98';
-  const legPose = p === 'squat' ? 'M91 113 L72 157 L90 202 M109 113 L128 157 L110 202' : p === 'lunge' ? 'M95 113 L65 156 L60 207 M105 113 L142 148 L155 198' : p === 'hinge' ? 'M91 113 L86 164 L90 212 M109 113 L115 164 L111 212' : p === 'ankle' ? 'M91 113 L88 170 L75 211 M109 113 L112 170 L126 211' : 'M91 113 L84 162 L76 211 M109 113 L118 162 L128 211';
-  const arrow = p === 'mobility' || p === 'balance' ? '<path class="arrow" d="M45 35 Q100 6 155 35" fill="none" stroke="var(--mobility)" stroke-width="5" stroke-linecap="round"/><path d="M151 22 L159 36 L143 38" fill="none" stroke="var(--mobility)" stroke-width="4" stroke-linecap="round"/>' : '<path class="arrow" d="M160 55 v70" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M149 116 l11 16 11-16" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>';
-  return `<svg viewBox="0 0 200 230" aria-label="Exercise visualization: ${escapeHtml(ex.name)}">
-    <rect x="0" y="0" width="200" height="230" fill="rgba(255,255,255,.015)"/>
-    ${arrow}
-    <g class="move-body" fill="none" stroke="rgba(242,246,255,.86)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="100" cy="30" r="16" fill="none"/>
-      <path d="M100 48 L100 ${torsoY+66}"/>
-      <path class="move-limb" d="${armPose}"/>
-      <path class="move-limb" d="${legPose}"/>
-    </g>
-    <text x="100" y="222" text-anchor="middle" fill="rgba(242,246,255,.65)" font-size="12" font-weight="800" letter-spacing="1.5">${label.toUpperCase()}</text>
-  </svg>`;
+  return `<figure class="target-map"><div>${targetMap(ex,'front')}${targetMap(ex,'back')}</div><figcaption>Front · Back<br>Primary: solid · Secondary: dashed<br>Schematic target locations</figcaption></figure>`;
+}
+function printRoutine(){
+  const target = selected.size ? [...selected].map(id => muscleById[id].name).join(', ') : 'Full body';
+  q('#printOutput').innerHTML = `<h1>Muscle Atlas routine</h1><p>${escapeHtml(target)}</p><ol>${lastRoutine.map(ex => `<li><h2>${escapeHtml(ex.name)}</h2><p>${escapeHtml(setText(ex))}</p><p>Primary: ${ex.primary.map(id => escapeHtml(muscleById[id].name)).join(', ')}</p><ol>${ex.steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol><p>${escapeHtml(ex.cautions)}</p></li>`).join('')}</ol><p>Educational reference. Suggested quantities are generic. Coverage represents catalogue tags, not measured training outcomes.</p>`;
+  window.print();
 }
 
 function renderSources(){
-  return `<div class="source-box"><b>Evidence baseline:</b> strength work should cover major muscle groups at least two days per week. Mobility work here is intentionally conservative: warm up first, move slowly, do not bounce, and stop before pain. Sources: ${SOURCE_BASE.map(s => `<a target="_blank" rel="noopener noreferrer" href="${s.url}">${escapeHtml(s.label)}</a>`).join(' · ')}.</div>`;
+  return `<details class="source-box"><summary>Training information &amp; sources</summary><div><p>Generic exercise reference; adjust range and load to your circumstances. The app does not assess individual suitability.</p><p>Sources: ${SOURCE_BASE.map(s => `<a target="_blank" rel="noopener noreferrer" href="${s.url}">${escapeHtml(s.label)}</a>`).join(' · ')}.</p></div></details>`;
 }
 
 function toggleExercise(id){
@@ -872,6 +909,7 @@ function updateAll(){
   const list = currentList();
   const routine = generateRoutine(list);
   lastRoutine = routine;
+  q('#copyRoutine').disabled = q('#printRoutine').disabled = !routine.length;
   const pct = coveragePercent(routine);
   q('#results').innerHTML = `
     <div class="section-title"><h3>${modeTitle()}</h3><small>${activeModeHint()}</small></div>
@@ -898,10 +936,10 @@ function updateAll(){
   updateBodyClasses();
 }
 function modeTitle(){
-  return ({ finder:'Exercise finder', maxCoverage:'Compound coverage optimizer', isolate:'Single-muscle isolation', mobility:'Healthy mobility generator', balanced:'Balanced day generator' })[activeMode] || 'Exercise finder';
+  return ({ finder:'Exercise finder', maxCoverage:'Exercise finder', isolate:'Single-muscle isolation', mobility:'Mobility routine', balanced:'Balanced day generator' })[activeMode] || 'Exercise finder';
 }
 function activeModeHint(){
-  return ({ finder:'sorted by selected-muscle match', maxCoverage:'greedy coverage routine', isolate:'one primary target per exercise', mobility:'joint-friendly sequence', balanced:'push / pull / legs / core / mobility' })[activeMode] || '';
+  return ({ finder:'sorted by selected-muscle match', maxCoverage:'', isolate:'one primary target per exercise', mobility:'', balanced:'push / pull / legs / core / mobility' })[activeMode] || '';
 }
 
 async function copyRoutineText(){
@@ -943,6 +981,7 @@ q('#toggleSelectMode').addEventListener('click', () => { multiSelect = !multiSel
 q('#clearSelection').addEventListener('click', () => { selected.clear(); openedExercise = null; previewExercise = null; updateAll(); });
 q('#selectAllMajor').addEventListener('click', () => { selected = new Set(MUSCLES.map(m => m.id)); openedExercise = null; previewExercise = null; updateAll(); });
 q('#copyRoutine').addEventListener('click', copyRoutineText);
+q('#printRoutine').addEventListener('click', printRoutine);
 qa('.mode-btn').forEach(btn => btn.addEventListener('click', e => { activeMode = e.currentTarget.dataset.mode; qa('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === activeMode)); openedExercise = null; previewExercise = null; updateAll(); }));
 ['#typeFilter','#equipmentFilter','#difficultyFilter','#muscleSearch'].forEach(sel => q(sel).addEventListener('input', () => { openedExercise = null; previewExercise = null; updateAll(); }));
 
