@@ -73,7 +73,7 @@ test('kept routine rendering remains independent of changed filters and empty su
     function currentList(){return [];};function generateRoutine(){return [];};function routineCoverage(){return [];};
     function modeTitle(){return '';};function activeModeHint(){return '';};function renderSelectedChips(){return '';};
     function renderRoutine(){return '';};function renderExercises(){return '';};function renderSources(){return '';};
-    function updateBodyClasses(){};function copyRoutineText(){};function printRoutine(){};updateAll();`,context);
+    function updateBodyClasses(){};function updateBrowseContext(){};function copyRoutineText(){};function printRoutine(){};updateAll();`,context);
   assert.deepEqual(Array.from(vm.runInContext('lastRoutine.map(e=>e.id)',context)),['push-up','side-plank']);
   assert.equal(vm.runInContext('lastSuggestions.length',context),0);
 });

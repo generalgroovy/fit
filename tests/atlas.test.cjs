@@ -23,6 +23,8 @@ test('muscle-name search excludes unrelated exercises',()=>{
   vm.runInContext(script.slice(script.indexOf('function exerciseMatchesFilters'),script.indexOf('function exerciseScore')),app.ctx);
   assert.equal(app.run("exerciseMatchesFilters(EXERCISES.find(e=>e.id==='biceps-curl'),{type:'all',equipment:'all',difficulty:'all',search:'quadriceps'})"),false);
   assert.equal(app.run("exerciseMatchesFilters(EXERCISES.find(e=>e.id==='goblet-squat'),{type:'all',equipment:'all',difficulty:'all',search:'quadriceps'})"),true);
+  assert.equal(app.run("exerciseMatchesFilters(EXERCISES.find(e=>e.id==='push-up'),{type:'all',equipment:'all',difficulty:'all',search:'chest'})"),true);
+  assert.equal(app.run("exerciseMatchesFilters(EXERCISES.find(e=>e.id==='goblet-squat'),{type:'all',equipment:'all',difficulty:'all',search:'chest'})"),false);
 });
 test('routine generation uses only the visible filtered candidate list',()=>{
   const app=data();

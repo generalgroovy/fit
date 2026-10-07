@@ -380,6 +380,66 @@
       .mobile-note { display: block; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
     }
   .atlas-info { margin:10px 16px; font-size:13px; line-height:1.5; color:var(--muted); } summary { cursor:pointer; padding:8px 0; } .atlas-info a { color:var(--accent); } .muscle-list { display:flex; flex-wrap:wrap; gap:6px; padding:8px 0; } .muscle-list button { min-height:36px; } .muscle-focus { padding:8px 16px; min-height:38px; font-size:13px; color:var(--accent); } .atlas-legend { display:flex; gap:8px; flex-wrap:wrap; align-items:center; } .atlas-legend i { background:var(--accent); width:12px; height:12px; border-radius:3px; } .atlas-legend .secondary { background:#7aa8ff; border:1px dashed white; } .anatomy-lines { pointer-events:none; stroke:rgba(220,239,244,.5); stroke-width:1.5; fill:none; } .target-region { fill:#3c485c; stroke:#b0c1d1; stroke-width:1.1; } .target-region.primary-hit { fill:var(--accent); stroke:#edfff9; } .target-region.secondary-hit { fill:#7aa8ff; stroke:white; stroke-dasharray:3 2; } .target-region.dimmed { opacity:.2; } .target-map { margin:0; } .target-map>div { display:flex; justify-content:center; } .demo .target-map svg { width:50%; height:260px; } .target-map figcaption { font-size:11px; color:var(--muted); text-align:center; line-height:1.5; margin:8px 0; } .target-label { flex-basis:100%; font-size:12px; font-weight:700; } #printOutput { display:none; } .routine-box details { color:var(--muted); font-size:12px; } .source-box summary { color:var(--accent); } @media print { body { background:white!important; color:black!important; overflow:visible!important; } .app { display:none!important; } #printOutput { display:block; color:black; max-width:800px; padding:20px; } #printOutput>ol>li { break-inside:avoid; margin-bottom:20px; } #printOutput h2 { font-size:16px; } #printOutput p,#printOutput li { font-size:12px; } }
+    .atlas-intro { flex:1; min-width:180px; }
+    .atlas-intro h2, .section-title h2 { margin:0; font-size:17px; letter-spacing:-.02em; }
+    .atlas-intro p { margin:5px 0 0; color:var(--muted); font-size:12px; }
+    .quiet { color:var(--muted); font-size:12px; font-weight:400; }
+    .selection-options { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+    .toolbar-left { width:100%; }
+    .panel { grid-template-rows:auto minmax(0,1fr); }
+    .browse-controls { padding:16px 16px 10px; border-bottom:1px solid var(--line); }
+    .browse-controls .search { width:100%; }
+    .field-label { display:block; font-size:12px; color:var(--muted); margin:9px 0 6px; }
+    .filter-details { margin-top:6px; }
+    .filter-details summary { min-height:44px; font-size:13px; }
+    .filterbar { padding:0; border:0; }
+    .filterbar label { min-width:0; color:var(--muted); font-size:12px; }
+    .filterbar select { margin-top:6px; font-size:13px; }
+    .filter-context { display:flex; gap:8px; align-items:center; justify-content:space-between; }
+    .filter-context p { margin:6px 0; }
+    .filter-context button { padding:6px 10px; font-size:12px; flex-shrink:0; }
+    .browse-controls .chips { margin:6px 0 0; max-height:100px; overflow:auto; }
+    .routine-box { padding:10px 12px; }
+    .routine-summary { color:var(--text); min-height:44px; }
+    .routine-status { margin:5px 0 0; line-height:1.5; }
+    .routine-status:empty { display:none; }
+    .ex-meta { color:var(--muted); font-size:12px; line-height:1.5; }
+    .ex-tags { align-items:center; gap:8px; padding-top:0; }
+    .ex-head { align-items:center; cursor:pointer; }
+    .ex-disclosure { color:var(--accent); font-size:13px; white-space:nowrap; }
+    .ex-match { color:var(--accent); font-size:12px; margin-top:5px; }
+    .section-title #statExercises { font-size:12px; color:var(--muted); white-space:nowrap; }
+    .view-card h2 { color:var(--muted); }
+    .muscle-list button, button, select, .search { min-height:44px; }
+    select:focus-visible, input:focus-visible, [tabindex="-1"]:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    #routineDetails { scroll-margin-top:12px; }
+    @media (max-width:1120px) {
+      .atlas-card, .panel { min-height:0; }
+      .body-stage { max-height:640px; }
+      .content-scroll { overflow:visible; }
+      .browse-controls { padding:14px; }
+    }
+    @media (max-width:650px) {
+      .view-card { height:340px; }
+      .filterbar { grid-template-columns:1fr; }
+      .atlas-foot { flex-wrap:wrap; }
+      .atlas-legend { font-size:11px; }
+      .brand .mark { width:36px; height:36px; border-radius:12px; }
+      .top-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .top-actions button { padding:8px; font-size:13px; }
+      .atlas-intro { min-width:0; }
+      .toolbar-left { align-items:center; }
+      .filter-context { align-items:flex-start; }
+    }
+    @media (min-width:1121px) and (max-height:680px) {
+      body { overflow:auto; }
+      .app { height:auto; }
+      .atlas-card, .panel { height:640px; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *, *::before, *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
+      .exercise:hover { transform:none; }
+    }
   </style>
 </head>
 <body>
@@ -390,53 +450,59 @@
           <svg viewBox="0 0 64 64"><path d="M32 6c8 0 12 5 12 12 0 4-2 7-5 9 9 3 15 12 15 24H10c0-12 6-21 15-24-3-2-5-5-5-9 0-7 4-12 12-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/></svg>
         </div>
         <div class="brand-copy">
-          <h1>Muscle Atlas Trainer</h1>
-
+            <h1>Muscle Atlas</h1>
+            <div class="subtitle">Explore a muscle. Find an exercise. Make it yours.</div>
         </div>
       </div>
-      <div class="top-actions" role="toolbar" aria-label="Training mode">
-        <button class="pill mode-btn active" data-mode="finder">Finder</button>
-        <button class="pill mode-btn" data-mode="maxCoverage">Target most muscles</button>
-        <button class="pill mode-btn" data-mode="isolate">Isolate single</button>
-        <button class="pill mode-btn" data-mode="mobility">Mobility</button>
-        <button class="pill mode-btn" data-mode="balanced">Balanced day</button>
-      </div>
+      <nav class="top-actions" aria-label="Atlas workspace">
+        <button class="ghost" data-jump="atlasHeading">Explore</button>
+        <button class="ghost" data-jump="exerciseHeading">Exercises</button>
+        <button class="ghost" data-jump="routineDetails" id="routineJump">Routine</button>
+      </nav>
     </header>
 
     <main>
       <section class="left atlas-card" aria-label="Human muscle atlas">
         <div class="toolbar">
           <div class="toolbar-left">
-            <input id="muscleSearch" class="search" type="search" placeholder="Search muscle or exercise…" aria-label="Search muscle or exercise" />
-            <button class="ghost" id="toggleSelectMode">Multi-select: on</button>
-            <button class="ghost" id="clearSelection">Clear</button>
-            <button class="solid" id="selectAllMajor">Select all major</button>
+            <div class="atlas-intro"><h2 id="atlasHeading" tabindex="-1">Choose your muscles</h2><p>Tap the map or choose a name below.</p></div>
+            <button class="ghost" id="clearSelection">Clear muscles</button>
             <label class="view-switcher">View
               <select id="atlasView"><option value="front">Front</option><option value="back">Back</option><option value="left">Left side</option><option value="right">Right side</option></select>
             </label>
           </div>
         </div>
-        <details class="atlas-info"><summary>Muscle list</summary><div id="muscleList" class="muscle-list"></div></details>
+        <details class="atlas-info"><summary>Choose by name <span class="quiet">· selection options</span></summary><div class="selection-options"><button class="ghost" id="toggleSelectMode">Choose several: on</button><button class="ghost" id="selectAllMajor">Select all 24 groups</button></div><div id="muscleList" class="muscle-list"></div></details>
         <div id="muscleFocus" class="muscle-focus" role="status">Select a region</div>
         <div class="body-stage">
           <div class="body-grid" id="bodyGrid"></div>
         </div>
         <div class="atlas-foot">
           <span class="atlas-legend"><i></i> Selected / primary <i class="secondary"></i> Secondary</span>
-          <span id="selectedCount">0 selected</span>
+          <button class="solid" data-jump="exerciseHeading" id="showExercises">See exercises</button><span id="selectedCount" class="sr-only">0 selected</span>
         </div>
         <details class="atlas-info"><summary>Info &amp; sources</summary><p>Select a body region or use the muscle list. Open an exercise to compare its primary and secondary targets. Repeated regions share the selection.</p><p>These original schematic maps show approximate group locations, not tissue depth, individual anatomy, or measured activation. The rotator cuff and hip flexors include deep muscles; the atlas uses surface projections to make them selectable. Exercise diagrams show targets, not movement technique.</p><p>Reference: <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-5-muscles-of-the-pectoral-girdle-and-upper-limbs" target="_blank" rel="noopener">OpenStax upper limbs</a> · <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs" target="_blank" rel="noopener">Lower limbs</a>. Diagrams are original SVG drawings. Coverage counts the catalogue's target tags; it does not measure training effectiveness.</p></details>
       </section>
 
       <aside class="right panel" aria-label="Exercise results and instructions">
+        <div class="browse-controls">
+          <div class="section-title"><h2 id="exerciseHeading" tabindex="-1">Find an exercise</h2><span id="statExercises">0</span></div>
+          <label class="field-label" for="muscleSearch">Search exercises or muscles</label>
+          <input id="muscleSearch" class="search" type="search" placeholder="Try chest, squat, or shoulder…" />
+          <details id="filterDetails" class="filter-details"><summary>Refine exercises <span id="filterCount" class="quiet"></span></summary>
+          <label class="field-label" for="browseMode">Find by</label>
+          <select id="browseMode" aria-describedby="modeHelp"><option value="finder">All matching exercises</option><option value="maxCoverage">More muscle groups</option><option value="isolate">One primary muscle</option><option value="mobility">Mobility &amp; stretches</option><option value="balanced">Varied movement patterns</option></select>
+          <p id="modeHelp" class="routine-note"></p>
         <div class="filterbar">
+          <label>Type
           <select id="typeFilter" aria-label="Exercise type filter">
             <option value="all">All types</option>
             <option value="strength">Strength</option>
             <option value="mobility">Mobility</option>
             <option value="stretch">Stretch</option>
             <option value="activation">Activation</option>
-          </select>
+          </select></label>
+          <label>Equipment
           <select id="equipmentFilter" aria-label="Equipment filter">
             <option value="all">All equipment</option>
             <option value="bodyweight">Bodyweight</option>
@@ -444,18 +510,19 @@
             <option value="barbell">Barbell</option>
             <option value="cable_band">Cable / band</option>
             <option value="machine">Machine</option>
-          </select>
+          </select></label>
+          <label>Level
           <select id="difficultyFilter" aria-label="Difficulty filter">
             <option value="all">All levels</option>
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
             <option value="advanced">Advanced</option>
-          </select>
+          </select></label>
         </div>
-        <div class="stats-row">
-          <div class="stat"><b id="statExercises">0</b><span>matching exercises</span></div>
-          <div class="stat"><b id="statMuscles">0</b><span>selected muscles</span></div>
-          <div class="stat"><b id="statCoverage">0/24</b><span>groups in routine</span></div>
+          </details>
+          <div class="filter-context"><p id="filterSummary" class="routine-note"></p><button class="ghost" id="resetFilters" hidden>Reset filters</button></div>
+          <div id="selectionChips"></div>
+          <p id="resultStatus" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></p>
         </div>
         <div class="content-scroll" id="results"></div>
       </aside>
@@ -711,7 +778,7 @@ function exerciseMatchesFilters(ex, f){
   if(f.equipment !== 'all' && ex.equipment !== f.equipment) return false;
   if(f.difficulty !== 'all' && ex.difficulty !== f.difficulty) return false;
   if(f.search){
-    const hay = [ex.name, ex.summary, ex.type, ex.equipment, ex.difficulty, ...ex.primary.map(id => muscleById[id]?.name), ...ex.secondary.map(id => muscleById[id]?.name)].join(' ').toLowerCase();
+    const hay = [ex.name, ex.summary, ex.type, ex.equipment.replaceAll('_',' '), ex.difficulty, ...[...ex.primary,...ex.secondary].flatMap(id => [muscleById[id]?.name,MUSCLE_DETAILS[id]])].join(' ').toLowerCase();
     if(!hay.includes(f.search)) return false;
   }
   return true;
@@ -830,7 +897,7 @@ function coveragePercent(routine){
 }
 
 function renderSelectedChips(){
-  if(selected.size === 0) return '<div class="chips"><span class="chip warn">Full body</span></div>';
+  if(selected.size === 0) return '';
   return `<div class="chips">${[...selected].map(id => `<button class="chip primary" data-remove="${id}" title="Remove ${escapeHtml(muscleById[id].name)}">${escapeHtml(muscleById[id].name)} ×</button>`).join('')}</div>`;
 }
 
@@ -848,14 +915,14 @@ function renderCoverage(routine){
 function renderRoutine(routine){
   const kept = routineStore.current() !== null;
   return `<section class="routine-box" aria-label="Reference routine"><details id="routineDetails" ${routineOpen ? 'open' : ''}>
-    <summary class="routine-summary">${kept ? 'My routine' : 'Suggested routine'} · ${routine.length}</summary>
+    <summary class="routine-summary">${kept ? 'My routine' : 'Suggested routine'} · ${routine.length} ${routine.length === 1 ? 'exercise' : 'exercises'}</summary>
     <p class="routine-note">${kept ? 'Kept separately from filters. Open a name for instructions.' : 'Suggestions follow your filters. Keep them or add exercises individually.'}</p>
     <div class="routine-actions"><button class="ghost" data-routine-action="suggest" ${lastSuggestions.length ? '' : 'disabled'}>${kept ? 'Use current suggestions' : 'Keep routine'}</button>${kept ? '<button class="ghost" data-routine-action="clear">Clear routine</button>' : ''}<button class="ghost" data-routine-action="undo" ${routineStore.canUndo() ? '' : 'disabled'}>Undo</button></div>
     ${routine.length ? `<ol>${routine.map((ex,index) => `<li><div class="routine-item"><details data-routine-detail="${ex.id}" ${routineDetailOpen.has(ex.id) ? 'open' : ''}><summary>${escapeHtml(ex.name)}</summary><p>${escapeHtml(setText(ex))}</p><p>Primary: ${ex.primary.map(id=>escapeHtml(muscleById[id].name)).join(', ')}</p><ol>${ex.steps.map(step=>`<li>${escapeHtml(step)}</li>`).join('')}</ol><p>${escapeHtml(ex.cautions)}</p></details>${kept ? `<div class="routine-tools"><button class="ghost" data-routine-action="up" data-id="${ex.id}" aria-label="Move ${escapeHtml(ex.name)} up" ${index === 0 ? 'disabled' : ''}>↑</button><button class="ghost" data-routine-action="down" data-id="${ex.id}" aria-label="Move ${escapeHtml(ex.name)} down" ${index === routine.length-1 ? 'disabled' : ''}>↓</button><button class="ghost" data-routine-action="remove" data-id="${ex.id}" aria-label="Remove ${escapeHtml(ex.name)} from routine">×</button></div>` : ''}</div></li>`).join('')}</ol>` : '<p class="routine-note">Add an exercise from the list, or use current suggestions.</p>'}
     ${renderCoverage(routine)}
     <p class="routine-note">Suggested quantities are generic reference values. Adjust to your circumstances.</p>
-    </details><div class="routine-actions"><button class="ghost" id="copyRoutine" ${routine.length ? '' : 'disabled'}>Copy routine</button><button class="ghost" id="printRoutine" ${routine.length ? '' : 'disabled'}>Print routine</button></div>
-    <p class="routine-status" role="status">${escapeHtml(routineStore.message())}</p></section>`;
+    <div class="routine-actions"><button class="ghost" id="copyRoutine" ${routine.length ? '' : 'disabled'}>Copy routine</button><button class="ghost" id="printRoutine" ${routine.length ? '' : 'disabled'}>Print routine</button></div>
+    </details><p class="routine-status">${escapeHtml(routineStore.message())}</p></section>`;
 }
 
 function setText(ex){
@@ -868,7 +935,7 @@ function setText(ex){
 }
 
 function renderExercises(list){
-  if(!list.length) return '<div class="routine-box"><h4>No matches</h4><p class="routine-note">Try another mode, fewer filters or a different muscle group.</p><button class="ghost" data-reset-filters>Reset filters</button></div>';
+  if(!list.length) return '<div class="routine-box"><h4>No exercises match yet</h4><p class="routine-note">Reset the search and filters, or choose different muscles. Your kept routine stays here.</p><button class="ghost" data-reset-filters>Reset search &amp; filters</button><button class="ghost" data-change-muscles>Choose muscles</button></div>';
   return `<div class="exercise-list">${list.map(ex => renderExercise(ex)).join('')}</div>`;
 }
 
@@ -877,23 +944,24 @@ function renderExercise(ex){
   const score = coverageCount(ex, selectedTarget());
   const primary = ex.primary.map(id => muscleById[id]?.name || id);
   const secondary = ex.secondary.map(id => muscleById[id]?.name || id);
-  const all = [...primary, ...secondary].slice(0, 8).join(', ');
   return `<article class="exercise ${open ? 'open' : ''}" data-exercise="${ex.id}">
     <div class="ex-head" role="button" tabindex="0" aria-label="${open ? 'Close' : 'Open'} ${escapeHtml(ex.name)}" aria-expanded="${open}" aria-controls="exercise-${ex.id}">
       <div>
         <div class="ex-title">${escapeHtml(ex.name)}</div>
         <div class="ex-sub">${escapeHtml(primary.join(', '))}</div>
+        ${selected.size ? `<div class="ex-match">Targets ${score} of ${selected.size} selected ${selected.size === 1 ? 'group' : 'groups'}</div>` : ''}
       </div>
-      <div class="score" title="${selected.size ? 'Selected muscle groups tagged in this exercise' : 'Muscle groups tagged in this exercise'}"><b>${score}${selected.size ? '/' + selected.size : ''}</b><span>${selected.size ? 'selected' : 'groups'}</span></div>
+      <span class="ex-disclosure" aria-hidden="true">${open ? 'Close −' : 'Details +'}</span>
     </div>
     <div class="ex-tags">
-      <span class="chip">${escapeHtml(ex.type)}</span><span class="chip">${escapeHtml(ex.equipment)}</span><span class="chip">${escapeHtml(ex.difficulty)}</span><span class="chip">${escapeHtml(setText(ex))}</span>
-      <button class="ghost catalogue-add" data-routine-action="add" data-id="${ex.id}" aria-label="${routineStore.current()?.includes(ex.id) ? 'Already in routine' : 'Add ' + escapeHtml(ex.name) + ' to routine'}" ${routineStore.current()?.includes(ex.id) ? 'disabled' : ''}>${routineStore.current()?.includes(ex.id) ? 'Added' : '+ Routine'}</button>
+      <span class="ex-meta">${escapeHtml(ex.equipment === 'cable_band' ? 'Cable / band' : ex.equipment[0].toUpperCase()+ex.equipment.slice(1))} · ${escapeHtml(ex.difficulty)}</span>
+      <button class="ghost catalogue-add" data-routine-action="add" data-id="${ex.id}" aria-label="${routineStore.current()?.includes(ex.id) ? 'Already in routine' : 'Add ' + escapeHtml(ex.name) + ' to routine'}" ${routineStore.current()?.includes(ex.id) ? 'disabled' : ''}>${routineStore.current()?.includes(ex.id) ? '✓ In routine' : '+ Add'}</button>
     </div>
     <div class="ex-body" id="exercise-${ex.id}">
       <div class="detail-grid">
         <div class="demo">${demoSvg(ex)}</div>
         <div>
+          <p class="routine-note">${escapeHtml(ex.type[0].toUpperCase()+ex.type.slice(1))} · Reference amount: ${escapeHtml(setText(ex))}</p>
           <div class="chips"><span class="target-label">Primary</span>
             ${ex.primary.map(id => `<span class="chip primary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
             <span class="target-label">Secondary</span>${ex.secondary.map(id => `<span class="chip secondary">${escapeHtml(muscleById[id].name)}</span>`).join('')}
@@ -939,6 +1007,40 @@ function renderSources(){
   return `<details class="source-box"><summary>Training information &amp; sources</summary><div><p>Generic exercise reference; adjust range and load to your circumstances. The app does not assess individual suitability.</p><p>Sources: ${SOURCE_BASE.map(s => `<a target="_blank" rel="noopener noreferrer" href="${s.url}">${escapeHtml(s.label)}</a>`).join(' · ')}.</p></div></details>`;
 }
 
+function jumpTo(id){
+  const target = q('#'+id);
+  if(!target) return;
+  if(id === 'routineDetails') { target.open = true; routineOpen = true; }
+  target.scrollIntoView({block:'start'});
+  (id === 'routineDetails' ? q('summary',target) : target).focus({preventScroll:true});
+}
+
+function removeMuscle(id){
+  const ids = [...selected], index = ids.indexOf(id);
+  selected.delete(id);
+  previewExercise = null; openedExercise = null;
+  updateAll();
+  const next = [...selected][Math.min(index,selected.size-1)];
+  (next ? q(`[data-remove="${next}"]`) : q('#exerciseHeading'))?.focus({preventScroll:true});
+}
+
+function updateBrowseContext(list, routine, kept){
+  const f = filters();
+  const constraints = [];
+  if(activeMode !== 'finder') constraints.push(modeTitle());
+  ['type','equipment','difficulty'].forEach(key => {
+    if(f[key] !== 'all') constraints.push(q('#'+key+'Filter').selectedOptions[0].textContent);
+  });
+  q('#filterCount').textContent = constraints.length ? `· ${constraints.length} active` : '';
+  q('#modeHelp').textContent = activeModeHint();
+  q('#filterSummary').textContent = [selected.size ? `${selected.size} muscle ${selected.size === 1 ? 'group' : 'groups'}` : 'All muscles',...constraints,f.search ? `Search: “${q('#muscleSearch').value.trim()}”` : ''].filter(Boolean).join(' · ');
+  q('#resetFilters').hidden = constraints.length === 0 && !f.search;
+  q('#statExercises').textContent = `${list.length} ${list.length === 1 ? 'exercise' : 'exercises'}`;
+  q('#showExercises').textContent = `See ${list.length} ${list.length === 1 ? 'exercise' : 'exercises'} →`;
+  q('#routineJump').textContent = kept === null ? 'Routine' : `Routine · ${routine.length}`;
+  q('#resultStatus').textContent = `${list.length} matching ${list.length === 1 ? 'exercise' : 'exercises'}. ${q('#filterSummary').textContent}.`;
+}
+
 function toggleExercise(id){
   openedExercise = openedExercise === id ? null : id;
   previewExercise = openedExercise ? EXERCISES.find(ex => ex.id === id) : null;
@@ -953,27 +1055,24 @@ function updateAll(){
   const routine = kept === null ? lastSuggestions : kept.map(id => EXERCISES.find(ex => ex.id === id));
   lastRoutine = routine;
   q('#results').innerHTML = `
-    <div class="section-title"><h3>${modeTitle()}</h3><small>${activeModeHint()}</small></div>
-    ${renderSelectedChips()}
     ${renderRoutine(routine)}
     ${renderExercises(list)}
     ${renderSources()}
   `;
-  q('#statExercises').textContent = list.length;
-  q('#statMuscles').textContent = selected.size;
-  const coverage = routineCoverage(routine);
-  q('#statCoverage').textContent = `${coverage.filter(row => row.primary.length || row.secondary.length).length}/${coverage.length}`;
+  q('#selectionChips').innerHTML = renderSelectedChips();
+  updateBrowseContext(list,routine,kept);
   q('#selectedCount').textContent = `${selected.size} selected`;
-  q('#toggleSelectMode').textContent = `Multi-select: ${multiSelect ? 'on' : 'off'}`;
+  q('#toggleSelectMode').textContent = `Choose several: ${multiSelect ? 'on' : 'off'}`;
   q('#toggleSelectMode').setAttribute('aria-pressed', String(multiSelect));
   q('#routineDetails').addEventListener('toggle', e => { routineOpen = e.currentTarget.open; });
   q('#routineCoverage').addEventListener('toggle', e => { coverageOpen = e.currentTarget.open; });
   qa('[data-routine-detail]').forEach(detail => detail.addEventListener('toggle', () => { if(detail.open) routineDetailOpen.add(detail.dataset.routineDetail); else routineDetailOpen.delete(detail.dataset.routineDetail); }));
   qa('[data-routine-action]').forEach(button => button.addEventListener('click', () => editRoutine(button.dataset.routineAction, button.dataset.id)));
   q('[data-reset-filters]')?.addEventListener('click', resetFilters);
+  q('[data-change-muscles]')?.addEventListener('click', () => jumpTo('atlasHeading'));
   q('#copyRoutine').addEventListener('click', copyRoutineText);
   q('#printRoutine').addEventListener('click', printRoutine);
-  qa('[data-remove]').forEach(btn => btn.addEventListener('click', e => { selected.delete(e.currentTarget.dataset.remove); previewExercise = null; openedExercise = null; updateAll(); }));
+  qa('[data-remove]').forEach(btn => btn.addEventListener('click', e => removeMuscle(e.currentTarget.dataset.remove)));
   qa('.exercise').forEach(card => {
     const id = card.dataset.exercise;
     const ex = EXERCISES.find(e => e.id === id);
@@ -996,6 +1095,9 @@ function editRoutine(action, id){
   if(action === 'undo') routineStore.undo();
   if(action !== 'add') routineOpen = true;
   updateAll();
+  const name = EXERCISES.find(ex => ex.id === id)?.name || '';
+  const message = {add:`${name} added.`,remove:`${name} removed.`,up:`${name} moved up.`,down:`${name} moved down.`,suggest:'Suggestions kept.',clear:'Routine cleared.',undo:'Last routine edit undone.'}[action];
+  q('#resultStatus').textContent = `${message} ${lastRoutine.length} ${lastRoutine.length === 1 ? 'exercise' : 'exercises'} in ${routineStore.current() === null ? 'suggested' : 'your'} routine. ${routineStore.message()}`;
   if(action === 'add') q(`.exercise[data-exercise="${id}"] .ex-head`)?.focus({preventScroll:true});
   else if(action === 'remove') {
     const next = routineStore.current()?.[Math.min(index, (routineStore.current()?.length || 0)-1)];
@@ -1009,16 +1111,16 @@ function resetFilters(){
   ['#typeFilter','#equipmentFilter','#difficultyFilter'].forEach(selector => q(selector).value = 'all');
   q('#muscleSearch').value = '';
   activeMode = 'finder';
-  qa('.mode-btn').forEach(button => { button.classList.toggle('active', button.dataset.mode === activeMode); button.setAttribute('aria-pressed', String(button.dataset.mode === activeMode)); });
+  q('#browseMode').value = 'finder';
   openedExercise = previewExercise = null;
   updateAll();
   q('#muscleSearch').focus();
 }
 function modeTitle(){
-  return ({ finder:'Exercise finder', maxCoverage:'Exercise finder', isolate:'Single-muscle isolation', mobility:'Mobility routine', balanced:'Balanced day generator' })[activeMode] || 'Exercise finder';
+  return ({ finder:'All matching exercises', maxCoverage:'More muscle groups', isolate:'One primary muscle', mobility:'Mobility & stretches', balanced:'Varied movement patterns' })[activeMode] || 'All matching exercises';
 }
 function activeModeHint(){
-  return ({ finder:'sorted by selected-muscle match', maxCoverage:'', isolate:'one primary target per exercise', mobility:'', balanced:'push / pull / legs / core / mobility' })[activeMode] || '';
+  return ({ finder:'Exercises are ordered by their match to your selected muscles.', maxCoverage:'Strength and activation exercises ordered by how many selected groups they target.', isolate:'Exercises with one primary target. Secondary muscles can still be involved.', mobility:'Mobility, stretches and activation exercises for your selected groups.', balanced:'Suggestions combine push, pull, legs, core and mobility patterns when available.' })[activeMode] || '';
 }
 
 async function copyRoutineText(){
@@ -1064,7 +1166,9 @@ q('#atlasView').addEventListener('change', e => setAtlasView(e.target.value));
 q('#toggleSelectMode').addEventListener('click', () => { multiSelect = !multiSelect; updateAll(); });
 q('#clearSelection').addEventListener('click', () => { selected.clear(); openedExercise = null; previewExercise = null; updateAll(); });
 q('#selectAllMajor').addEventListener('click', () => { selected = new Set(MUSCLES.map(m => m.id)); openedExercise = null; previewExercise = null; updateAll(); });
-qa('.mode-btn').forEach(btn => { btn.setAttribute('aria-pressed', String(btn.dataset.mode === activeMode)); btn.addEventListener('click', e => { activeMode = e.currentTarget.dataset.mode; qa('.mode-btn').forEach(b => { b.classList.toggle('active', b.dataset.mode === activeMode); b.setAttribute('aria-pressed', String(b.dataset.mode === activeMode)); }); openedExercise = null; previewExercise = null; updateAll(); }); });
+q('#browseMode').addEventListener('change', e => { activeMode = e.target.value; openedExercise = null; previewExercise = null; updateAll(); });
+q('#resetFilters').addEventListener('click', resetFilters);
+qa('[data-jump]').forEach(button => button.addEventListener('click', () => jumpTo(button.dataset.jump)));
 ['#typeFilter','#equipmentFilter','#difficultyFilter','#muscleSearch'].forEach(sel => q(sel).addEventListener('input', () => { openedExercise = null; previewExercise = null; updateAll(); }));
 
 let localRoutineStorage;
