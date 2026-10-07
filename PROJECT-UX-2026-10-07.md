@@ -20,7 +20,7 @@ Local: `node --test tests/*.cjs` passes **24 tests**. `node --check routine-mode
 
 Parent-owned Computer Use browser checks: **1366 × 900**, **390 × 844**, **320 × 740**, and short desktop **1366 × 600**. Verified Pectorals/Biceps chip removal with Enter focuses the next chip and then the results heading; an empty search resets to 40 exercises; Push-Up and Side Plank can be added, reordered, removed, undone and restored after reload in the kept order. Phone layouts have no horizontal overflow; See exercises moves focus to the heading and routine controls stay reachable. Short-window navigation and scrolling remain usable. Evidence: [desktop](docs/evidence/2026-10-07-desktop.png), [phone](docs/evidence/2026-10-07-mobile.png). The implementation agent's browser session had no surfaces; these observations came from the parent's working CUA session.
 
-Independent baseline findings were incorporated: selected-chip focus recovery, understandable equipment labels, live result feedback and explicit reset scope. Final independent diff review remains a parent integration gate before promotion; this branch is a candidate and is not deployed by the owner.
+Independent baseline findings were incorporated: selected-chip focus recovery, understandable equipment labels, live result feedback and explicit reset scope. Final independent review accepted runtime `bedab7ff3d639129219c3b4140f6f1d2b55db2d9`, reran all 24 tests and found no release blocker. The parent completed integration, main promotion and public runtime-byte verification; the shared `ux-2026-10-07/release-status.json` and `reviews/fit-review.md` retain the final acceptance records.
 
 ## Limits
 
