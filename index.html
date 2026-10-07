@@ -936,7 +936,7 @@ function renderSuggestionReview(){
   const count = changes.added.length;
   return `<details id="suggestionReview" class="suggestion-review" ${suggestionReviewOpen ? 'open' : ''}>
     <summary>Review current suggestions · ${count} new</summary>
-    <p class="routine-note">${lastSuggestions.length ? `${lastSuggestions.length} suggested exercises from your current muscles and filters. Open a name for instructions.` : 'No suggestions match the current muscles and filters. Your routine is unchanged.'}</p>
+    <p class="routine-note">${lastSuggestions.length ? `${lastSuggestions.length} suggested ${lastSuggestions.length === 1 ? 'exercise' : 'exercises'} from your current muscles and filters. Open a name for instructions.` : 'No suggestions match the current muscles and filters. Your routine is unchanged.'}</p>
     ${lastSuggestions.length ? `${renderRoutineItems(lastSuggestions,false,true)}
       <p class="routine-note">${changes.sameOrder ? 'These suggestions already match your routine and its order.' : changes.removed.length ? `Replacing removes ${changes.removed.length}: ${changes.removed.map(ex=>escapeHtml(ex.name)).join(', ')}. It uses the order shown above.` : 'Replacing uses exactly the exercises and order shown above.'}</p>
       <div class="routine-actions"><button class="solid" data-routine-action="append-suggestions" ${count ? '' : 'disabled'}>Add ${count} new ${count === 1 ? 'exercise' : 'exercises'}</button><button class="ghost" data-routine-action="replace-suggestions" ${changes.sameOrder ? 'disabled' : ''}>Replace my routine</button></div>

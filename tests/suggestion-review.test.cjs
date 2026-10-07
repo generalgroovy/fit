@@ -66,6 +66,7 @@ test('changed and empty filters update the preview while keeping the saved routi
   assert.deepEqual(Array.from(a.run('lastSuggestions.map(ex=>ex.id)')),['goblet-squat']);
   assert.match(a.element('#results').innerHTML,/id="suggestionReview"[^>]* open/);
   assert.match(a.element('#results').innerHTML,/Replacing removes 1: Side Plank/);
+  assert.match(a.element('#results').innerHTML,/1 suggested exercise from/);
   a.element('#muscleSearch').value='nothingmatches';
   a.run('updateAll()');
   const review=a.run('renderSuggestionReview()');
