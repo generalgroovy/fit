@@ -403,6 +403,9 @@
     .routine-summary { color:var(--text); min-height:44px; }
     .routine-status { margin:5px 0 0; line-height:1.5; }
     .routine-status:empty { display:none; }
+    .suggestion-review { margin:12px 0; padding:8px 10px; border:1px solid var(--line); border-radius:12px; }
+    .suggestion-review > summary { color:var(--accent); min-height:44px; font-weight:700; }
+    .suggestion-label { display:block; color:var(--muted); font-size:12px; font-weight:400; }
     .ex-meta { color:var(--muted); font-size:12px; line-height:1.5; }
     .ex-tags { align-items:center; gap:8px; padding-top:0; }
     .ex-head { align-items:center; cursor:pointer; }
@@ -682,6 +685,7 @@ let routineStore;
 let routineOpen = false;
 let coverageOpen = false;
 let routineDetailOpen = new Set();
+let suggestionReviewOpen = false;
 let lastSuggestions = [];
 
 const muscleById = Object.fromEntries(MUSCLES.map(m => [m.id, m]));
@@ -912,13 +916,41 @@ function renderCoverage(routine){
     <p class="routine-note">${selected.size ? 'Selected groups' : 'All catalogue groups'}. Each group counts once; tags describe targets, not measured activation or training quality.</p>
     <table class="coverage-table"><caption class="sr-only">Routine targets by muscle group</caption><thead><tr><th scope="col">Group</th><th scope="col">Primary in</th><th scope="col">Secondary in</th></tr></thead><tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(muscleById[row.id].name)}</th><td class="coverage-primary">${row.primary.map(ex => escapeHtml(ex.name)).join(', ') || '—'}</td><td class="coverage-secondary">${row.secondary.map(ex => escapeHtml(ex.name)).join(', ') || '—'}</td></tr>`).join('')}</tbody></table></details>`;
 }
+function suggestionChanges(){
+  const kept = routineStore.current() || [];
+  const suggested = lastSuggestions.map(ex => ex.id);
+  return {
+    added: lastSuggestions.filter(ex => !kept.includes(ex.id)),
+    removed: kept.filter(id => !suggested.includes(id)).map(id => EXERCISES.find(ex => ex.id === id)),
+    sameOrder: JSON.stringify(kept) === JSON.stringify(suggested)
+  };
+}
+function renderRoutineItems(routine, editable, preview = false){
+  return `<ol>${routine.map((ex,index) => {
+    const detailId = preview ? `suggestion-${ex.id}` : ex.id;
+    return `<li><div class="routine-item"><details data-routine-detail="${detailId}" ${routineDetailOpen.has(detailId) ? 'open' : ''}><summary>${escapeHtml(ex.name)}${preview ? `<span class="suggestion-label">${routineStore.current()?.includes(ex.id) ? 'Already in your routine' : 'New to your routine'} · ${escapeHtml(ex.equipment === 'cable_band' ? 'Cable / band' : ex.equipment[0].toUpperCase()+ex.equipment.slice(1))}</span>` : ''}</summary><p>${escapeHtml(setText(ex))}</p><p>Primary: ${ex.primary.map(id=>escapeHtml(muscleById[id].name)).join(', ')}</p><ol>${ex.steps.map(step=>`<li>${escapeHtml(step)}</li>`).join('')}</ol><p>${escapeHtml(ex.cautions)}</p></details>${editable ? `<div class="routine-tools"><button class="ghost" data-routine-action="up" data-id="${ex.id}" aria-label="Move ${escapeHtml(ex.name)} up" ${index === 0 ? 'disabled' : ''}>↑</button><button class="ghost" data-routine-action="down" data-id="${ex.id}" aria-label="Move ${escapeHtml(ex.name)} down" ${index === routine.length-1 ? 'disabled' : ''}>↓</button><button class="ghost" data-routine-action="remove" data-id="${ex.id}" aria-label="Remove ${escapeHtml(ex.name)} from routine">×</button></div>` : ''}</div></li>`;
+  }).join('')}</ol>`;
+}
+function renderSuggestionReview(){
+  const changes = suggestionChanges();
+  const count = changes.added.length;
+  return `<details id="suggestionReview" class="suggestion-review" ${suggestionReviewOpen ? 'open' : ''}>
+    <summary>Review current suggestions · ${count} new</summary>
+    <p class="routine-note">${lastSuggestions.length ? `${lastSuggestions.length} suggested exercises from your current muscles and filters. Open a name for instructions.` : 'No suggestions match the current muscles and filters. Your routine is unchanged.'}</p>
+    ${lastSuggestions.length ? `${renderRoutineItems(lastSuggestions,false,true)}
+      <p class="routine-note">${changes.sameOrder ? 'These suggestions already match your routine and its order.' : changes.removed.length ? `Replacing removes ${changes.removed.length}: ${changes.removed.map(ex=>escapeHtml(ex.name)).join(', ')}. It uses the order shown above.` : 'Replacing uses exactly the exercises and order shown above.'}</p>
+      <div class="routine-actions"><button class="solid" data-routine-action="append-suggestions" ${count ? '' : 'disabled'}>Add ${count} new ${count === 1 ? 'exercise' : 'exercises'}</button><button class="ghost" data-routine-action="replace-suggestions" ${changes.sameOrder ? 'disabled' : ''}>Replace my routine</button></div>
+      <p class="routine-note">Adding keeps your current order and appends only new exercises. Undo reverses either action.</p>` : ''}
+    </details>`;
+}
 function renderRoutine(routine){
   const kept = routineStore.current() !== null;
   return `<section class="routine-box" aria-label="Reference routine"><details id="routineDetails" ${routineOpen ? 'open' : ''}>
     <summary class="routine-summary">${kept ? 'My routine' : 'Suggested routine'} · ${routine.length} ${routine.length === 1 ? 'exercise' : 'exercises'}</summary>
     <p class="routine-note">${kept ? 'Kept separately from filters. Open a name for instructions.' : 'Suggestions follow your filters. Keep them or add exercises individually.'}</p>
-    <div class="routine-actions"><button class="ghost" data-routine-action="suggest" ${lastSuggestions.length ? '' : 'disabled'}>${kept ? 'Use current suggestions' : 'Keep routine'}</button>${kept ? '<button class="ghost" data-routine-action="clear">Clear routine</button>' : ''}<button class="ghost" data-routine-action="undo" ${routineStore.canUndo() ? '' : 'disabled'}>Undo</button></div>
-    ${routine.length ? `<ol>${routine.map((ex,index) => `<li><div class="routine-item"><details data-routine-detail="${ex.id}" ${routineDetailOpen.has(ex.id) ? 'open' : ''}><summary>${escapeHtml(ex.name)}</summary><p>${escapeHtml(setText(ex))}</p><p>Primary: ${ex.primary.map(id=>escapeHtml(muscleById[id].name)).join(', ')}</p><ol>${ex.steps.map(step=>`<li>${escapeHtml(step)}</li>`).join('')}</ol><p>${escapeHtml(ex.cautions)}</p></details>${kept ? `<div class="routine-tools"><button class="ghost" data-routine-action="up" data-id="${ex.id}" aria-label="Move ${escapeHtml(ex.name)} up" ${index === 0 ? 'disabled' : ''}>↑</button><button class="ghost" data-routine-action="down" data-id="${ex.id}" aria-label="Move ${escapeHtml(ex.name)} down" ${index === routine.length-1 ? 'disabled' : ''}>↓</button><button class="ghost" data-routine-action="remove" data-id="${ex.id}" aria-label="Remove ${escapeHtml(ex.name)} from routine">×</button></div>` : ''}</div></li>`).join('')}</ol>` : '<p class="routine-note">Add an exercise from the list, or use current suggestions.</p>'}
+    <div class="routine-actions">${kept ? '<button class="ghost" data-routine-action="clear">Clear routine</button>' : `<button class="solid" data-routine-action="suggest" ${lastSuggestions.length ? '' : 'disabled'}>Keep routine</button>`}<button class="ghost" data-routine-action="undo" ${routineStore.canUndo() ? '' : 'disabled'}>Undo</button></div>
+    ${routine.length ? renderRoutineItems(routine,kept) : `<p class="routine-note">${kept ? 'Add an exercise from the list, or review current suggestions below.' : 'No suggestions match the current muscles and filters. Add an exercise from the list or adjust your filters.'}</p>`}
+    ${kept ? renderSuggestionReview() : ''}
     ${renderCoverage(routine)}
     <p class="routine-note">Suggested quantities are generic reference values. Adjust to your circumstances.</p>
     <div class="routine-actions"><button class="ghost" id="copyRoutine" ${routine.length ? '' : 'disabled'}>Copy routine</button><button class="ghost" id="printRoutine" ${routine.length ? '' : 'disabled'}>Print routine</button></div>
@@ -1038,7 +1070,8 @@ function updateBrowseContext(list, routine, kept){
   q('#statExercises').textContent = `${list.length} ${list.length === 1 ? 'exercise' : 'exercises'}`;
   q('#showExercises').textContent = `See ${list.length} ${list.length === 1 ? 'exercise' : 'exercises'} →`;
   q('#routineJump').textContent = kept === null ? 'Routine' : `Routine · ${routine.length}`;
-  q('#resultStatus').textContent = `${list.length} matching ${list.length === 1 ? 'exercise' : 'exercises'}. ${q('#filterSummary').textContent}.`;
+  const status = `${list.length} matching ${list.length === 1 ? 'exercise' : 'exercises'}. ${q('#filterSummary').textContent}.`;
+  if(q('#resultStatus').textContent !== status) q('#resultStatus').textContent = status;
 }
 
 function toggleExercise(id){
@@ -1065,6 +1098,7 @@ function updateAll(){
   q('#toggleSelectMode').textContent = `Choose several: ${multiSelect ? 'on' : 'off'}`;
   q('#toggleSelectMode').setAttribute('aria-pressed', String(multiSelect));
   q('#routineDetails').addEventListener('toggle', e => { routineOpen = e.currentTarget.open; });
+  q('#suggestionReview')?.addEventListener('toggle', e => { suggestionReviewOpen = e.currentTarget.open; });
   q('#routineCoverage').addEventListener('toggle', e => { coverageOpen = e.currentTarget.open; });
   qa('[data-routine-detail]').forEach(detail => detail.addEventListener('toggle', () => { if(detail.open) routineDetailOpen.add(detail.dataset.routineDetail); else routineDetailOpen.delete(detail.dataset.routineDetail); }));
   qa('[data-routine-action]').forEach(button => button.addEventListener('click', () => editRoutine(button.dataset.routineAction, button.dataset.id)));
@@ -1087,18 +1121,25 @@ function updateAll(){
 function editRoutine(action, id){
   const previous = routineStore.current() || [];
   const index = previous.indexOf(id);
+  const addedCount = action === 'append-suggestions' ? suggestionChanges().added.length : 0;
+  if((action === 'append-suggestions' || action === 'replace-suggestions') && !lastSuggestions.length) return;
+  if(action === 'append-suggestions' && !addedCount) return;
+  if(action === 'replace-suggestions' && suggestionChanges().sameOrder) return;
   if(action === 'add') routineStore.add(id);
   if(action === 'remove') routineStore.remove(id);
   if(action === 'up' || action === 'down') routineStore.move(id, action === 'up' ? -1 : 1);
   if(action === 'suggest') routineStore.replace(lastSuggestions.map(ex=>ex.id));
+  if(action === 'append-suggestions') routineStore.replace([...previous,...suggestionChanges().added.map(ex=>ex.id)]);
+  if(action === 'replace-suggestions') routineStore.replace(lastSuggestions.map(ex=>ex.id));
   if(action === 'clear') routineStore.clear();
   if(action === 'undo') routineStore.undo();
   if(action !== 'add') routineOpen = true;
   updateAll();
   const name = EXERCISES.find(ex => ex.id === id)?.name || '';
-  const message = {add:`${name} added.`,remove:`${name} removed.`,up:`${name} moved up.`,down:`${name} moved down.`,suggest:'Suggestions kept.',clear:'Routine cleared.',undo:'Last routine edit undone.'}[action];
+  const message = {add:`${name} added.`,remove:`${name} removed.`,up:`${name} moved up.`,down:`${name} moved down.`,suggest:'Suggestions kept.','append-suggestions':`${addedCount} new ${addedCount === 1 ? 'exercise' : 'exercises'} added. Your previous order was kept.`,'replace-suggestions':'Routine replaced with the reviewed suggestions.',clear:'Routine cleared.',undo:'Last routine edit undone.'}[action];
   q('#resultStatus').textContent = `${message} ${lastRoutine.length} ${lastRoutine.length === 1 ? 'exercise' : 'exercises'} in ${routineStore.current() === null ? 'suggested' : 'your'} routine. ${routineStore.message()}`;
   if(action === 'add') q(`.exercise[data-exercise="${id}"] .ex-head`)?.focus({preventScroll:true});
+  else if(action === 'append-suggestions' || action === 'replace-suggestions') q('#suggestionReview summary')?.focus({preventScroll:true});
   else if(action === 'remove') {
     const next = routineStore.current()?.[Math.min(index, (routineStore.current()?.length || 0)-1)];
     (next && q(`[data-routine-action="remove"][data-id="${next}"]`) || q('#routineDetails summary'))?.focus({preventScroll:true});
