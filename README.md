@@ -1,6 +1,6 @@
-# Muscle Atlas Trainer
+# Muscle Atlas
 
-[Open the atlas](https://generalgroovy.github.io/fit/). Explore muscle groups in four body views, inspect exercise references, and keep a reusable routine.
+[Open the atlas](https://generalgroovy.github.io/fit/). Select muscle groups in four body views, inspect exercise references, and save a routine.
 
 ## Build a reference routine
 

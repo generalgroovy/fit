@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Muscle Atlas Trainer</title>
+  <title>Muscle Atlas — muscles and exercises</title>
   <style>
     :root {
       --bg: #080a0f;
@@ -18,9 +18,9 @@
       --accent-2: #7aa8ff;
       --danger: #ff7a90;
       --warn: #ffd166;
-      --shadow: 0 24px 80px rgba(0,0,0,.45);
-      --radius: 22px;
-      --radius-sm: 14px;
+      --shadow: none;
+      --radius: 10px;
+      --radius-sm: 6px;
       --body-idle: rgba(118, 132, 157, .24);
       --body-stroke: rgba(255,255,255,.16);
       --primary: #74f2ce;
@@ -33,9 +33,7 @@
     body {
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:
-        radial-gradient(circle at 20% 12%, rgba(116,242,206,.16), transparent 35%),
-        radial-gradient(circle at 84% 24%, rgba(122,168,255,.15), transparent 34%),
-        linear-gradient(135deg, #080a0f 0%, #101522 52%, #07080c 100%);
+        var(--bg);
       color: var(--text);
       overflow: hidden;
     }
@@ -62,7 +60,7 @@
       padding: 14px 16px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(21,27,41,.86), rgba(12,15,24,.82));
+      background: var(--panel);
       box-shadow: var(--shadow);
       backdrop-filter: blur(18px);
     }
@@ -91,7 +89,7 @@
       min-height: 40px;
     }
     .solid {
-      background: linear-gradient(135deg, rgba(116,242,206,.95), rgba(122,168,255,.92));
+      background: var(--accent);
       color: #06100e;
       border: 0;
       font-weight: 800;
@@ -443,6 +441,11 @@
       *, *::before, *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
       .exercise:hover { transform:none; }
     }
+  /* Atlas colors identify targets; surrounding chrome stays neutral. */
+    header{min-height:60px;padding:10px 14px;box-shadow:none;backdrop-filter:none}
+    .brand .mark{display:none}.atlas-card,.panel{backdrop-filter:none}
+    .view-card{border-radius:6px;background:#111722}.view-card h2{letter-spacing:.03em;text-transform:none;color:var(--muted)}
+    .pill,.ghost,.solid,select{border-radius:6px}
   </style>
 </head>
 <body>
@@ -454,7 +457,6 @@
         </div>
         <div class="brand-copy">
             <h1>Muscle Atlas</h1>
-            <div class="subtitle">Explore a muscle. Find an exercise. Make it yours.</div>
         </div>
       </div>
       <nav class="top-actions" aria-label="Atlas workspace">
@@ -475,7 +477,7 @@
             </label>
           </div>
         </div>
-        <details class="atlas-info"><summary>Choose by name <span class="quiet">· selection options</span></summary><div class="selection-options"><button class="ghost" id="toggleSelectMode">Choose several: on</button><button class="ghost" id="selectAllMajor">Select all 24 groups</button></div><div id="muscleList" class="muscle-list"></div></details>
+        <details class="atlas-info"><summary>Choose by name</summary><div class="selection-options"><button class="ghost" id="toggleSelectMode">Choose several: on</button><button class="ghost" id="selectAllMajor">Select all 24 groups</button></div><div id="muscleList" class="muscle-list"></div></details>
         <div id="muscleFocus" class="muscle-focus" role="status">Select a region</div>
         <div class="body-stage">
           <div class="body-grid" id="bodyGrid"></div>
@@ -484,7 +486,7 @@
           <span class="atlas-legend"><i></i> Selected / primary <i class="secondary"></i> Secondary</span>
           <button class="solid" data-jump="exerciseHeading" id="showExercises">See exercises</button><span id="selectedCount" class="sr-only">0 selected</span>
         </div>
-        <details class="atlas-info"><summary>Info &amp; sources</summary><p>Select a body region or use the muscle list. Open an exercise to compare its primary and secondary targets. Repeated regions share the selection.</p><p>These original schematic maps show approximate group locations, not tissue depth, individual anatomy, or measured activation. The rotator cuff and hip flexors include deep muscles; the atlas uses surface projections to make them selectable. Exercise diagrams show targets, not movement technique.</p><p>Reference: <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-5-muscles-of-the-pectoral-girdle-and-upper-limbs" target="_blank" rel="noopener">OpenStax upper limbs</a> · <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs" target="_blank" rel="noopener">Lower limbs</a>. Diagrams are original SVG drawings. Coverage counts the catalogue's target tags; it does not measure training effectiveness.</p></details>
+        <details class="atlas-info"><summary>Info &amp; sources</summary><p>The same muscle is selected across all views. Exercise maps distinguish primary and secondary targets.</p><p>These original schematic maps show approximate group locations, not tissue depth, individual anatomy, or measured activation. The rotator cuff and hip flexors include deep muscles; the atlas uses surface projections to make them selectable. Exercise diagrams show targets, not movement technique.</p><p>Reference: <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-5-muscles-of-the-pectoral-girdle-and-upper-limbs" target="_blank" rel="noopener">OpenStax upper limbs</a> · <a href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs" target="_blank" rel="noopener">Lower limbs</a>. Diagrams are original SVG drawings. Coverage counts the catalogue's target tags; it does not measure training effectiveness.</p></details>
       </section>
 
       <aside class="right panel" aria-label="Exercise results and instructions">
